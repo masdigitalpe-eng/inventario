@@ -192,8 +192,20 @@
                             </div>
                             <div class="w-full sm:w-48">
                                 <label class="block text-xs font-black text-amber-700 mb-2">¿CUÁNTAS UNIDADES TRAE?</label>
-                                <input type="number" id="unds_por_empaque" required min="1" value="1" class="input-app bg-white text-center font-black text-xl text-amber-900 border-amber-200 focus:border-amber-500" oninput="calcularDinamicamente()">
+                                <input type="number" id="unds_por_empaque" required min="1" placeholder="1" class="input-app bg-white text-center font-black text-xl text-amber-900 border-amber-200 focus:border-amber-500" oninput="calcularDinamicamente()" onfocus="this.select()">
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Cantidades (Cajas y Sueltos) -->
+                    <div class="grid grid-cols-2 gap-4 md:gap-6 mb-6">
+                        <div class="bg-slate-50 border-2 border-slate-100 rounded-2xl p-5 flex flex-col items-center justify-center focus-within:border-amber-400 focus-within:bg-amber-50 transition-colors shadow-inner">
+                            <label class="text-[11px] font-black text-slate-500 uppercase tracking-wider mb-3 text-center">Cajas / Paquetes Enteros</label>
+                            <input type="number" id="cant_empaques" required min="0" step="0.01" placeholder="0" class="w-full bg-transparent text-5xl md:text-6xl font-black text-center text-slate-800 outline-none p-0" oninput="calcularDinamicamente()" onfocus="this.select()">
+                        </div>
+                        <div class="bg-slate-50 border-2 border-slate-100 rounded-2xl p-5 flex flex-col items-center justify-center focus-within:border-blue-400 focus-within:bg-blue-50 transition-colors shadow-inner">
+                            <label class="text-[11px] font-black text-slate-500 uppercase tracking-wider mb-3 text-center">Unidades Sueltas</label>
+                            <input type="number" id="cant_sueltos" required min="0" step="0.01" placeholder="0" class="w-full bg-transparent text-5xl md:text-6xl font-black text-center text-slate-800 outline-none p-0" oninput="calcularDinamicamente()" onfocus="this.select()">
                         </div>
                     </div>
 
@@ -230,14 +242,14 @@
                             <label class="block text-xs font-black text-slate-600 mb-2">COSTO DE LA CAJA / PAQUETE ENTERO</label>
                             <div class="relative">
                                 <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-lg">S/</span>
-                                <input type="number" id="costo_empaque" required min="0" step="0.01" value="0.00" class="input-app pl-12 text-xl font-bold" oninput="calcularDinamicamente()">
+                                <input type="number" id="costo_empaque" required min="0" step="0.01" placeholder="0.00" class="input-app pl-12 text-xl font-bold" oninput="calcularDinamicamente()" onfocus="this.select()">
                             </div>
                         </div>
                         <div>
                             <label class="block text-xs font-black text-emerald-700 mb-2">PRECIO DE VENTA (POR UNIDAD)</label>
                             <div class="relative">
                                 <span class="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-600 font-bold text-lg">S/</span>
-                                <input type="number" id="precio_venta" required min="0" step="0.01" value="0.00" class="input-app pl-12 text-xl font-bold bg-emerald-50 border-emerald-200 text-emerald-900 focus:border-emerald-500 focus:bg-white" oninput="calcularDinamicamente()">
+                                <input type="number" id="precio_venta" required min="0" step="0.01" placeholder="0.00" class="input-app pl-12 text-xl font-bold bg-emerald-50 border-emerald-200 text-emerald-900 focus:border-emerald-500 focus:bg-white" oninput="calcularDinamicamente()" onfocus="this.select()">
                             </div>
                         </div>
                     </div>
@@ -356,6 +368,7 @@
         let catalogoBase = [];
         let html5QrCode = null;
         let googleScriptURL = MI_URL_DE_GOOGLE_SHEETS.trim();
+        let audioCtx = null; // Variable para el sonido del escáner
         
         document.addEventListener('DOMContentLoaded', () => {
             verificarLinkYConectar();
@@ -379,53 +392,72 @@
         }
 
         // --- SISTEMA DE SONIDO BEEP (CÁMARA) ---
+        function inicializarAudio() {
+            // Desbloquea el audio en navegadores móviles al hacer clic en el botón
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
         function playBeep() {
             try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
+                if (!audioCtx) inicializarAudio();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
                 osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.type = 'sine';
-                osc.frequency.value = 900; // Sonido agudo de caja
-                gain.gain.setValueAtTime(0, ctx.currentTime);
-                gain.gain.linearRampToValueAtTime(1, ctx.currentTime + 0.01);
-                gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.15);
-                osc.start(ctx.currentTime);
-                osc.stop(ctx.currentTime + 0.2);
+                gain.connect(audioCtx.destination);
+                osc.type = 'square'; // Sonido idéntico a escáner de caja registradora
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime); // Tono alto
+                gain.gain.setValueAtTime(0, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(1, audioCtx.currentTime + 0.02);
+                gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.15);
             } catch(e) { console.log("Audio no soportado"); }
         }
 
         // --- CÁMARA ESCÁNER ---
         function abrirCamara() {
+            inicializarAudio(); // Activar permiso de sonido del navegador
+            
             const modal = document.getElementById('modal-escaner');
             modal.classList.remove('hidden');
             setTimeout(() => modal.classList.remove('opacity-0'), 10);
             
             if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
             
-            // Configuración mejorada para Códigos de Barras 1D (Más ancho)
+            // Recuadro alargado para códigos de barras
             const configEscaner = { 
-                fps: 10,
+                fps: 15,
                 qrbox: (viewfinderWidth, viewfinderHeight) => {
                     return {
-                        width: viewfinderWidth * 0.9, // 90% del ancho de la pantalla
-                        height: 120 // Altura reducida para enfocar solo el código
+                        width: viewfinderWidth * 0.85, 
+                        height: 150 
                     };
                 }
             };
             
-            // Fuerza la cámara trasera del celular
+            // Forzar la cámara a resolución HD y autofocus continuo
+            const videoConstraints = {
+                facingMode: "environment",
+                width: { ideal: 1280 },
+                height: { ideal: 720 },
+                advanced: [{ focusMode: "continuous" }]
+            };
+            
             html5QrCode.start(
-                { facingMode: "environment" }, 
+                videoConstraints, 
                 configEscaner,
                 (decodedText) => {
-                    playBeep(); // Sonido de éxito
+                    playBeep(); // Suena fuerte el BEEP de éxito
                     cerrarEscaner();
                     document.getElementById('codigo').value = decodedText;
                     buscarProductoPorCodigo(decodedText);
                 },
-                (errorMessage) => { /* Ignorar errores continuos de búsqueda visual */ }
+                (errorMessage) => { /* Ignorar avisos mientras busca la caja */ }
             ).catch(err => {
                 cerrarEscaner();
                 mostrarToast("No se pudo abrir la cámara. Acepta los permisos de tu navegador.", "error");
@@ -639,11 +671,13 @@
             document.getElementById('categoria').value = prod.Categoria || 'Abarrotes';
             document.getElementById('nombre').value = prod.Nombre || '';
             document.getElementById('tipo_empaque').value = prod.Tipo_Empaque || 'Caja';
-            document.getElementById('unds_por_empaque').value = prod.Unds_Por_Empaque || 1;
-            document.getElementById('cant_empaques').value = prod.Cant_Empaques || 0;
-            document.getElementById('cant_sueltos').value = prod.Cant_Sueltos || 0;
-            document.getElementById('costo_empaque').value = prod.Costo_Empaque || 0;
-            document.getElementById('precio_venta').value = prod.Precio_Venta || 0;
+            
+            // Dejar celdas vacías si vienen con 0 o nulo para facilitar borrado manual
+            document.getElementById('unds_por_empaque').value = prod.Unds_Por_Empaque || '';
+            document.getElementById('cant_empaques').value = prod.Cant_Empaques || '';
+            document.getElementById('cant_sueltos').value = prod.Cant_Sueltos || '';
+            document.getElementById('costo_empaque').value = prod.Costo_Empaque || '';
+            document.getElementById('precio_venta').value = prod.Precio_Venta || '';
 
             calcularDinamicamente();
             cambiarPestana('tab-registro');
@@ -660,6 +694,14 @@
             document.getElementById('producto_id').value = '';
             document.getElementById('tipo_empaque').value = 'Caja';
             document.getElementById('categoria').value = 'Abarrotes';
+            
+            // Vaciar todas las celdas numéricas
+            document.getElementById('unds_por_empaque').value = '';
+            document.getElementById('cant_empaques').value = '';
+            document.getElementById('cant_sueltos').value = '';
+            document.getElementById('costo_empaque').value = '';
+            document.getElementById('precio_venta').value = '';
+            
             calcularDinamicamente();
             
             const btn = document.getElementById('btn-submit');
