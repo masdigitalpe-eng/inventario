@@ -330,9 +330,9 @@
                 </button>
             </div>
             <div class="p-2 bg-black relative">
-                <div id="reader" class="w-full rounded-2xl overflow-hidden bg-black aspect-square flex items-center justify-center"></div>
+                <div id="reader" class="w-full rounded-2xl overflow-hidden bg-black flex items-center justify-center min-h-[350px]"></div>
                 <!-- Linea láser animada -->
-                <div class="absolute top-1/2 left-4 right-4 h-0.5 bg-red-500 shadow-[0_0_10px_red] z-10 animate-[pulse_1s_ease-in-out_infinite]"></div>
+                <div class="absolute top-1/2 left-6 right-6 h-1 bg-red-500/80 shadow-[0_0_15px_red] z-10 animate-[pulse_1s_ease-in-out_infinite]"></div>
             </div>
             <div class="px-5 py-5 text-center bg-white">
                 <p class="text-sm text-slate-600 font-bold uppercase tracking-wider">Apunta al código de barras</p>
@@ -404,10 +404,21 @@
             
             if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
             
+            // Configuración mejorada para Códigos de Barras 1D (Más ancho)
+            const configEscaner = { 
+                fps: 10,
+                qrbox: (viewfinderWidth, viewfinderHeight) => {
+                    return {
+                        width: viewfinderWidth * 0.9, // 90% del ancho de la pantalla
+                        height: 120 // Altura reducida para enfocar solo el código
+                    };
+                }
+            };
+            
             // Fuerza la cámara trasera del celular
             html5QrCode.start(
                 { facingMode: "environment" }, 
-                { fps: 15, qrbox: { width: 250, height: 150 }, aspectRatio: 1.0 },
+                configEscaner,
                 (decodedText) => {
                     playBeep(); // Sonido de éxito
                     cerrarEscaner();
