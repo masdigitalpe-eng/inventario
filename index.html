@@ -8,7 +8,6 @@
     <script src="https://unpkg.com/html5-qrcode"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         
@@ -55,8 +54,7 @@
             border-bottom: 1px solid rgba(226, 232, 240, 0.8);
         }
 
-        /* CORRECCIÓN ESCÁNER: Se eliminó object-fit: cover para no desalinear las coordenadas de lectura */
-        #reader video { border-radius: 1rem; width: 100%; object-fit: contain; }
+        #reader video { border-radius: 1rem; object-fit: cover; width: 100%; }
         #reader { border: none !important; }
     </style>
 </head>
@@ -203,11 +201,23 @@
                     <div class="grid grid-cols-2 gap-4 md:gap-6 mb-6">
                         <div class="bg-slate-50 border-2 border-slate-100 rounded-2xl p-5 flex flex-col items-center justify-center focus-within:border-amber-400 focus-within:bg-amber-50 transition-colors shadow-inner">
                             <label class="text-[11px] font-black text-slate-500 uppercase tracking-wider mb-3 text-center">Cajas / Paquetes Enteros</label>
-                            <input type="number" id="cant_empaques" required min="0" value="0" step="0.01" class="w-full bg-transparent text-5xl md:text-6xl font-black text-center text-slate-800 outline-none p-0" oninput="calcularDinamicamente()" onfocus="this.select()">
+                            <input type="number" id="cant_empaques" required min="0" step="0.01" placeholder="0" class="w-full bg-transparent text-5xl md:text-6xl font-black text-center text-slate-800 outline-none p-0" oninput="calcularDinamicamente()" onfocus="this.select()">
                         </div>
                         <div class="bg-slate-50 border-2 border-slate-100 rounded-2xl p-5 flex flex-col items-center justify-center focus-within:border-blue-400 focus-within:bg-blue-50 transition-colors shadow-inner">
                             <label class="text-[11px] font-black text-slate-500 uppercase tracking-wider mb-3 text-center">Unidades Sueltas</label>
-                            <input type="number" id="cant_sueltos" required min="0" value="0" step="0.01" class="w-full bg-transparent text-5xl md:text-6xl font-black text-center text-slate-800 outline-none p-0" oninput="calcularDinamicamente()" onfocus="this.select()">
+                            <input type="number" id="cant_sueltos" required min="0" step="0.01" placeholder="0" class="w-full bg-transparent text-5xl md:text-6xl font-black text-center text-slate-800 outline-none p-0" oninput="calcularDinamicamente()" onfocus="this.select()">
+                        </div>
+                    </div>
+
+                    <!-- Cantidades (Cajas y Sueltos) -->
+                    <div class="grid grid-cols-2 gap-4 md:gap-6 mb-6">
+                        <div class="bg-slate-50 border-2 border-slate-100 rounded-2xl p-5 flex flex-col items-center justify-center focus-within:border-amber-400 focus-within:bg-amber-50 transition-colors shadow-inner">
+                            <label class="text-[11px] font-black text-slate-500 uppercase tracking-wider mb-3 text-center">Cajas / Paquetes Enteros</label>
+                            <input type="number" id="cant_empaques" required min="0" value="0" step="0.01" class="w-full bg-transparent text-5xl md:text-6xl font-black text-center text-slate-800 outline-none p-0" oninput="calcularDinamicamente()">
+                        </div>
+                        <div class="bg-slate-50 border-2 border-slate-100 rounded-2xl p-5 flex flex-col items-center justify-center focus-within:border-blue-400 focus-within:bg-blue-50 transition-colors shadow-inner">
+                            <label class="text-[11px] font-black text-slate-500 uppercase tracking-wider mb-3 text-center">Unidades Sueltas</label>
+                            <input type="number" id="cant_sueltos" required min="0" value="0" step="0.01" class="w-full bg-transparent text-5xl md:text-6xl font-black text-center text-slate-800 outline-none p-0" oninput="calcularDinamicamente()">
                         </div>
                     </div>
                     
@@ -419,20 +429,19 @@
             
             if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
             
-            // CORRECCIÓN ESCÁNER: 
-            // 1. Tamaño de caja estático para evitar que falle al calcular.
-            // 2. Se declaran explícitamente los formatos de código de barras para que los busque.
+            // SOLUCIÓN DEFINITIVA: 
+            // Eliminamos el "qrbox" (el recorte interno). Ahora el sistema escaneará 
+            // TODA la imagen que vea la cámara. Si el código está en la pantalla, lo leerá.
+            // Bajamos los FPS a 10 para darle tiempo a la cámara de enfocar (autofocus).
             const configEscaner = { 
-                fps: 10,
-                qrbox: { width: 250, height: 120 }, // Caja perfecta para barras 1D
+                fps: 10, 
                 formatsToSupport: [
-                    window.Html5QrcodeSupportedFormats.EAN_13,
-                    window.Html5QrcodeSupportedFormats.EAN_8,
-                    window.Html5QrcodeSupportedFormats.CODE_39,
-                    window.Html5QrcodeSupportedFormats.CODE_128,
-                    window.Html5QrcodeSupportedFormats.UPC_A,
-                    window.Html5QrcodeSupportedFormats.UPC_E,
-                    window.Html5QrcodeSupportedFormats.QR_CODE
+                    Html5QrcodeSupportedFormats.EAN_13,
+                    Html5QrcodeSupportedFormats.EAN_8,
+                    Html5QrcodeSupportedFormats.UPC_A,
+                    Html5QrcodeSupportedFormats.UPC_E,
+                    Html5QrcodeSupportedFormats.CODE_128,
+                    Html5QrcodeSupportedFormats.CODE_39
                 ]
             };
             
@@ -455,13 +464,9 @@
 
         function cerrarEscaner() {
             const modal = document.getElementById('modal-escaner');
-            
-            // CORRECCIÓN ESCÁNER: 'isScanning' no existía, el método correcto es getState() === 2 (SCANNING).
-            // Si no se detenía bien, la cámara se quedaba encendida crasheando la app en el siguiente uso.
-            if(html5QrCode && html5QrCode.getState && html5QrCode.getState() === 2) {
+            if(html5QrCode && html5QrCode.isScanning) {
                 html5QrCode.stop().then(() => html5QrCode.clear()).catch(e => console.log(e));
             }
-            
             modal.classList.add('opacity-0');
             setTimeout(() => { modal.classList.add('hidden'); }, 300);
         }
