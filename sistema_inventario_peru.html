@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario Pro - Sistema de Bodega</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7f9; }
+        
+        /* Personalización de Scrollbar para que se vea premium */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Ocultar flechas de inputs numéricos */
+        input[type="number"]::-webkit-inner-spin-button, 
+        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        
+        /* Animaciones suaves */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .toast-enter { animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        
+        /* Inputs estilo "App" */
+        .input-app {
+            width: 100%;
+            background-color: #f8fafc;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: #0f172a;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+        .input-app:focus {
+            background-color: #ffffff;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+        .input-app::placeholder { color: #94a3b8; font-weight: 400; }
+        
+        /* Glass Header */
+        .glass-header {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+        }
+    </style>
+</head>
+<body class="text-slate-800 h-screen flex flex-col overflow-hidden selection:bg-indigo-100 selection:text-indigo-900">
+
+    <!-- HEADER MODERNO -->
+    <header class="glass-header shadow-sm z-40 sticky top-0 shrink-0">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
+            
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-br from-indigo-500 to-blue-600 text-white p-2.5 rounded-xl shadow-lg shadow-indigo-500/30 flex items-center justify-center h-10 w-10">
+                    <i class="fas fa-layer-group text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-black tracking-tight text-slate-900">Bodega<span class="text-indigo-600">PRO</span></h1>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest -mt-1">Gestión de Inventario</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <!-- Indicador de conexión -->
+                <div id="sync-status" class="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-full border border-slate-200 transition-colors">
+                    <span class="relative flex h-2.5 w-2.5">
+                        <span id="sync-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span id="sync-dot" class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                    </span>
+                    <span id="sync-text" class="text-xs font-bold text-slate-600">Sin Conexión</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pestañas (Segmented Control) -->
+        <div class="max-w-7xl mx-auto px-4 pb-3 flex justify-center md:justify-start">
+            <div class="bg-slate-100/80 p-1 rounded-xl flex gap-1 w-full md:w-auto shadow-inner border border-slate-200/50">
+                <button onclick="cambiarPestana('tab-registro')" id="btn-tab-registro" class="flex-1 md:w-48 py-2 px-4 rounded-lg bg-white shadow-sm border border-slate-200/50 text-indigo-600 font-bold text-sm flex items-center justify-center gap-2 transition-all">
+                    <i class="fas fa-plus-circle"></i> Registrar
+                </button>
+                <button onclick="cambiarPestana('tab-inventario')" id="btn-tab-inventario" class="flex-1 md:w-48 py-2 px-4 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-200/50 font-medium text-sm flex items-center justify-center gap-2 transition-all">
+                    <i class="fas fa-table"></i> Inventario
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow flex flex-col overflow-hidden relative max-w-7xl mx-auto w-full">
+        
+        <!-- ========================================== -->
+        <!-- PESTAÑA 1: REGISTRO (DISEÑO CLEAN UI)      -->
+        <!-- ========================================== -->
+        <div id="tab-registro" class="h-full flex flex-col p-4 md:p-6 overflow-y-auto animate-fade-in">
+            <div class="max-w-2xl mx-auto w-full">
+                
+                <form id="product-form" class="space-y-6 pb-20">
+                    <input type="hidden" id="producto_id">
+                    
+                    <!-- Tarjeta 1: Producto -->
+                    <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/60 relative">
+                        <div class="flex justify-between items-center mb-5">
+                            <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                                <i class="fas fa-box-open text-indigo-400"></i> Datos del Producto
+                            </h3>
+                            <button type="button" onclick="limpiarFormulario()" class="text-xs font-bold text-slate-400 hover:text-red-500 transition-colors flex items-center gap-1 bg-slate-50 hover:bg-red-50 px-3 py-1.5 rounded-lg border border-slate-100">
+                                <i class="fas fa-eraser"></i> Limpiar
+                            </button>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <!-- Código de barras -->
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 mb-1.5">CÓDIGO DE BARRAS</label>
+                                <div class="flex gap-2">
+                                    <div class="relative flex-grow">
+                                        <i class="fas fa-barcode absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+                                        <input type="text" id="codigo" class="input-app pl-11 text-lg font-mono" placeholder="Ej. 775..." autocomplete="off">
+                                    </div>
+                                    <button type="button" onclick="abrirCamara()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-200 px-5 rounded-xl transition-colors flex items-center justify-center shadow-sm">
+                                        <i class="fas fa-camera text-xl"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Nombre -->
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 mb-1.5">NOMBRE DEL PRODUCTO</label>
+                                    <input type="text" id="nombre" required list="productos_list" class="input-app" placeholder="Ej. Leche Evaporada Gloria" onchange="autocompletarDesdeNombre()">
+                                    <datalist id="productos_list"></datalist>
+                                </div>
+                                <!-- Categoría -->
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 mb-1.5">CATEGORÍA</label>
+                                    <div class="relative">
+                                        <select id="categoria" required class="input-app appearance-none pr-10 cursor-pointer">
+                                            <option value="Abarrotes">Abarrotes</option>
+                                            <option value="Lácteos">Lácteos</option>
+                                            <option value="Bebidas">Bebidas</option>
+                                            <option value="Limpieza">Limpieza</option>
+                                            <option value="Cuidado Personal">Cuidado Personal</option>
+                                            <option value="Snacks y Golosinas">Snacks y Golosinas</option>
+                                            <option value="Licores">Licores</option>
+                                            <option value="Mascotas">Mascotas</option>
+                                            <option value="Condimentos">Condimentos</option>
+                                            <option value="Panadería">Panadería</option>
+                                            <option value="Verduras/Frutas">Verduras/Frutas</option>
+                                            <option value="Carnes/Congelados">Carnes/Congelados</option>
+                                            <option value="Otros">Otros</option>
+                                        </select>
+                                        <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-sm"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tarjeta 2: Inventario Físico -->
+                    <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/60">
+                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2 mb-5">
+                            <i class="fas fa-cubes text-amber-500"></i> Stock e Inventario
+                        </h3>
+                        
+                        <!-- Presentación -->
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-5">
+                            <div class="flex flex-col md:flex-row gap-4 items-end">
+                                <div class="flex-1 w-full">
+                                    <label class="block text-[11px] font-bold text-slate-500 mb-1.5">PRESENTACIÓN / EMPAQUE</label>
+                                    <div class="relative">
+                                        <select id="tipo_empaque" class="input-app appearance-none pr-10 bg-white">
+                                            <option value="Caja">Caja</option>
+                                            <option value="Plancha">Plancha</option>
+                                            <option value="Six-Pack">Six-Pack</option>
+                                            <option value="Saco">Saco</option>
+                                            <option value="Fardo">Fardo</option>
+                                            <option value="Display">Display</option>
+                                            <option value="Docena">Docena</option>
+                                            <option value="Paquete">Paquete</option>
+                                            <option value="Malla">Malla</option>
+                                            <option value="Kilo">Kilo</option>
+                                            <option value="Unidad">Unidad (Sin empaque)</option>
+                                        </select>
+                                        <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-sm"></i>
+                                    </div>
+                                </div>
+                                <div class="w-full md:w-32">
+                                    <label class="block text-[11px] font-bold text-slate-500 mb-1.5">TRAE (Unds)</label>
+                                    <input type="number" id="unds_por_empaque" required min="1" value="1" class="input-app bg-white text-center text-lg" oninput="calcularDinamicamente()">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cajas vs Sueltos (Gigantes) -->
+                        <div class="grid grid-cols-2 gap-4 md:gap-6 mb-5">
+                            <!-- Cajas -->
+                            <div class="bg-amber-50/50 border border-amber-100 rounded-2xl p-4 flex flex-col items-center justify-center relative overflow-hidden group focus-within:border-amber-400 focus-within:bg-amber-50 transition-colors">
+                                <label class="text-[10px] md:text-xs font-black text-amber-700 uppercase tracking-wide mb-2 text-center z-10">Cajas / Paquetes</label>
+                                <input type="number" id="cant_empaques" required min="0" value="0" step="0.01" class="w-full bg-transparent text-4xl md:text-5xl font-black text-center text-slate-800 outline-none z-10 p-0" oninput="calcularDinamicamente()">
+                                <i class="fas fa-box absolute -right-2 -bottom-4 text-6xl text-amber-500/10 group-focus-within:text-amber-500/20 transition-colors"></i>
+                            </div>
+                            <!-- Sueltos -->
+                            <div class="bg-blue-50/50 border border-blue-100 rounded-2xl p-4 flex flex-col items-center justify-center relative overflow-hidden group focus-within:border-blue-400 focus-within:bg-blue-50 transition-colors">
+                                <label class="text-[10px] md:text-xs font-black text-blue-700 uppercase tracking-wide mb-2 text-center z-10">Unds. Sueltas</label>
+                                <input type="number" id="cant_sueltos" required min="0" value="0" step="0.01" class="w-full bg-transparent text-4xl md:text-5xl font-black text-center text-slate-800 outline-none z-10 p-0" oninput="calcularDinamicamente()">
+                                <i class="fas fa-cookie absolute -right-2 -bottom-2 text-6xl text-blue-500/10 group-focus-within:text-blue-500/20 transition-colors"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- Total -->
+                        <div class="bg-slate-900 rounded-2xl p-4 flex justify-between items-center shadow-lg shadow-slate-900/20">
+                            <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Total en Almacén:</span>
+                            <div class="text-xl md:text-2xl font-black text-white">
+                                <span id="lbl_total_unds">0</span> <span class="text-sm text-slate-400 font-bold">Unds</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tarjeta 3: Finanzas -->
+                    <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/60">
+                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2 mb-5">
+                            <i class="fas fa-coins text-emerald-500"></i> Precios y Costos
+                        </h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                            <!-- Costo Compra -->
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 mb-1.5 flex justify-between">
+                                    <span>COSTO PAQUETE (Compra)</span>
+                                </label>
+                                <div class="relative">
+                                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">S/</span>
+                                    <input type="number" id="costo_empaque" required min="0" step="0.01" value="0.00" class="input-app pl-10 text-lg" oninput="calcularDinamicamente()">
+                                </div>
+                            </div>
+                            <!-- Precio Venta -->
+                            <div>
+                                <label class="block text-[11px] font-bold text-emerald-700 mb-1.5">PRECIO VENTA (x Unidad)</label>
+                                <div class="relative">
+                                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-600 font-bold">S/</span>
+                                    <input type="number" id="precio_venta" required min="0" step="0.01" value="0.00" class="input-app pl-10 text-lg bg-emerald-50/50 border-emerald-200 text-emerald-900 focus:border-emerald-500 focus:ring-emerald-500/20" oninput="calcularDinamicamente()">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Mini Dashboard Financiero -->
+                        <div class="flex gap-3 pt-4 border-t border-slate-100">
+                            <div class="flex-1 bg-slate-50 rounded-xl p-3 border border-slate-100">
+                                <p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Costo Unitario</p>
+                                <p id="lbl_costo_unit" class="text-base font-black text-slate-700">S/ 0.00</p>
+                            </div>
+                            <div class="flex-1 bg-emerald-50 rounded-xl p-3 border border-emerald-100 flex flex-col justify-center">
+                                <p class="text-[10px] font-bold text-emerald-700 uppercase mb-1">Margen / Ganancia</p>
+                                <p id="lbl_margen" class="text-base font-black text-emerald-600">S/ 0.00</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botón Principal -->
+                    <button type="submit" id="btn-submit" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl text-lg shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-3 transition-all active:scale-[0.98]">
+                        <i class="fas fa-check-circle text-xl"></i> <span>Guardar Producto</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- PESTAÑA 2: INVENTARIO (TABLA ELEGANTE)     -->
+        <!-- ========================================== -->
+        <div id="tab-inventario" class="hidden h-full flex flex-col p-4 md:p-6 animate-fade-in">
+            
+            <!-- Dashboard Resumen -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-5 shrink-0">
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/60 flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center"><i class="fas fa-boxes"></i></div>
+                    <div>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase">Productos</p>
+                        <h3 id="stat-productos" class="text-xl font-black text-slate-800 leading-none mt-1">0</h3>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/60 flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center"><i class="fas fa-layer-group"></i></div>
+                    <div>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase">Stock Total (Unds)</p>
+                        <h3 id="stat-unidades" class="text-xl font-black text-slate-800 leading-none mt-1">0</h3>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/60 flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-slate-50 text-slate-500 flex items-center justify-center"><i class="fas fa-chart-pie"></i></div>
+                    <div>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase">Capital Invertido</p>
+                        <h3 id="stat-costo" class="text-lg font-black text-slate-800 leading-none mt-1">S/ 0.00</h3>
+                    </div>
+                </div>
+                <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-4 shadow-sm text-white flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center"><i class="fas fa-cash-register"></i></div>
+                    <div>
+                        <p class="text-[10px] text-emerald-100 font-bold uppercase">Valor de Venta</p>
+                        <h3 id="stat-venta" class="text-lg font-black leading-none mt-1">S/ 0.00</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenedor de la Tabla -->
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-200/60 flex flex-col flex-grow overflow-hidden relative">
+                <!-- Buscador superior -->
+                <div class="p-4 border-b border-slate-100 flex flex-col sm:flex-row gap-3 bg-white z-10">
+                    <div class="relative flex-grow">
+                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="buscador" onkeyup="renderizarTabla()" placeholder="Buscar por nombre, código o categoría..." class="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition-all">
+                    </div>
+                    <button onclick="cargarDesdeGoogleSheets()" class="shrink-0 px-5 py-2.5 bg-slate-50 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-100 transition-colors text-sm font-bold flex items-center justify-center gap-2">
+                        <i class="fas fa-sync-alt" id="icon-refresh"></i> Actualizar
+                    </button>
+                </div>
+
+                <!-- Tabla Scrolleable -->
+                <div class="flex-grow overflow-auto relative bg-slate-50/30">
+                    
+                    <div id="loading-overlay" class="absolute inset-0 bg-white/80 backdrop-blur-sm z-20 flex flex-col items-center justify-center hidden">
+                        <div class="w-10 h-10 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin mb-3"></div>
+                        <p class="text-sm font-bold text-indigo-900">Sincronizando...</p>
+                    </div>
+
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-white sticky top-0 z-10 shadow-sm">
+                            <tr>
+                                <th class="px-5 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest w-2/5">Producto</th>
+                                <th class="px-5 py-3 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">Stock</th>
+                                <th class="px-5 py-3 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Finanzas</th>
+                                <th class="px-5 py-3 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-body" class="divide-y divide-slate-100 text-sm bg-white">
+                            <!-- JS Inyecta las filas aquí -->
+                        </tbody>
+                    </table>
+                    
+                    <!-- Estado Vacío -->
+                    <div id="estado-vacio" class="hidden flex-col items-center justify-center py-20 text-slate-400">
+                        <div class="bg-slate-50 w-20 h-20 rounded-full flex items-center justify-center mb-4 border border-slate-100"><i class="fas fa-inbox text-3xl text-slate-300"></i></div>
+                        <p class="text-lg font-bold text-slate-600">No hay productos</p>
+                        <p class="text-sm text-slate-400 mt-1 max-w-xs text-center">Registra productos o asegúrate de tener conexión con tu hoja de cálculo.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Escáner Profesional -->
+    <div id="modal-escaner" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl m-4 transform scale-95 transition-transform duration-300" id="modal-escaner-content">
+            <div class="px-5 py-4 flex justify-between items-center border-b border-slate-100">
+                <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-qrcode text-indigo-500"></i> Escanear Código
+                </h3>
+                <button onclick="cerrarEscaner()" class="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-full w-8 h-8 flex items-center justify-center transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-4 bg-slate-50">
+                <div id="reader" class="w-full rounded-2xl overflow-hidden bg-black shadow-inner"></div>
+            </div>
+            <div class="px-5 py-4 text-center border-t border-slate-100">
+                <p class="text-xs text-slate-500 font-medium">Ubica el código de barras dentro del recuadro de la cámara.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenedor Toasts -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 pointer-events-none"></div>
+
+    <script>
+        // =======================================================================
+        // 🔗 PEGA AQUÍ TU LINK DE GOOGLE APPS SCRIPT (Web App URL)
+        // =======================================================================
+        const MI_URL_DE_GOOGLE_SHEETS = ""; // Ej: "https://script.google.com/macros/s/AKfy.../exec"
+        // =======================================================================
+
+        let inventario = [];
+        let catalogoBase = [];
+        let googleScriptURL = MI_URL_DE_GOOGLE_SHEETS;
+        let html5QrcodeScanner = null;
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            actualizarIndicadorConexion();
+            if (googleScriptURL) {
+                cargarDesdeGoogleSheets();
+            } else {
+                const localData = localStorage.getItem('bodega_local_cache');
+                if (localData) { inventario = JSON.parse(localData); renderizarTabla(); }
+                mostrarToast("Modo Local (Sin Nube)", "warning");
+            }
+        });
+
+        // --- NAVEGACIÓN Y TABS ---
+        function cambiarPestana(tabId) {
+            document.getElementById('tab-registro').classList.add('hidden');
+            document.getElementById('tab-inventario').classList.add('hidden');
+            
+            const pestana = document.getElementById(tabId);
+            pestana.classList.remove('hidden');
+            
+            const btnReg = document.getElementById('btn-tab-registro');
+            const btnInv = document.getElementById('btn-tab-inventario');
+            
+            const styleActive = "flex-1 md:w-48 py-2 px-4 rounded-lg bg-white shadow-sm border border-slate-200/50 text-indigo-600 font-bold text-sm flex items-center justify-center gap-2 transition-all";
+            const styleInactive = "flex-1 md:w-48 py-2 px-4 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-200/50 font-medium text-sm flex items-center justify-center gap-2 transition-all";
+
+            if (tabId === 'tab-registro') {
+                btnReg.className = styleActive;
+                btnInv.className = styleInactive;
+                // Pequeño delay para que el foco funcione tras animaciones
+                setTimeout(() => document.getElementById('codigo').focus(), 100);
+            } else {
+                btnInv.className = styleActive;
+                btnReg.className = styleInactive;
+                renderizarTabla();
+            }
+        }
+
+        // --- CÁMARA ESCÁNER ---
+        function abrirCamara() {
+            const modal = document.getElementById('modal-escaner');
+            const content = document.getElementById('modal-escaner-content');
+            modal.classList.remove('hidden');
+            // Animación de entrada
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+            }, 10);
+            
+            if(html5QrcodeScanner) { html5QrcodeScanner.clear(); }
+            
+            html5QrcodeScanner = new Html5QrcodeScanner(
+                "reader", { fps: 10, qrbox: {width: 250, height: 150}, aspectRatio: 1.0 }, false);
+            html5QrcodeScanner.render(onScanSuccess, () => {});
+        }
+
+        function onScanSuccess(decodedText) {
+            cerrarEscaner();
+            const inputCodigo = document.getElementById('codigo');
+            inputCodigo.value = decodedText;
+            buscarProductoPorCodigo(decodedText);
+            mostrarToast("Código escaneado", "success");
+        }
+
+        function cerrarEscaner() {
+            const modal = document.getElementById('modal-escaner');
+            const content = document.getElementById('modal-escaner-content');
+            
+            if(html5QrcodeScanner) { html5QrcodeScanner.clear().catch(e => console.error(e)); }
+            
+            // Animación de salida
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        }
+
+        // --- LÓGICA DE CÁLCULOS VISUALES ---
+        function calcularDinamicamente() {
+            const undsPorEmpaque = parseFloat(document.getElementById('unds_por_empaque').value) || 0;
+            const cantEmpaques = parseFloat(document.getElementById('cant_empaques').value) || 0;
+            const cantSueltos = parseFloat(document.getElementById('cant_sueltos').value) || 0;
+            const costoEmpaque = parseFloat(document.getElementById('costo_empaque').value) || 0;
+            const precioVenta = parseFloat(document.getElementById('precio_venta').value) || 0;
+
+            const totalUnidades = (cantEmpaques * undsPorEmpaque) + cantSueltos;
+            const costoUnitario = (undsPorEmpaque > 0) ? (costoEmpaque / undsPorEmpaque) : 0;
+            const margen = precioVenta - costoUnitario;
+
+            document.getElementById('lbl_total_unds').innerText = totalUnidades % 1 === 0 ? totalUnidades : totalUnidades.toFixed(2);
+            document.getElementById('lbl_costo_unit').innerText = 'S/ ' + costoUnitario.toFixed(2);
+            
+            const lblMargen = document.getElementById('lbl_margen');
+            lblMargen.innerText = 'S/ ' + margen.toFixed(2);
+            // Colorear margen (verde si gana, rojo si pierde plata)
+            lblMargen.className = margen >= 0 ? "text-base font-black text-emerald-600" : "text-base font-black text-red-500";
+        }
+
+        // --- EVENTO GUARDAR PRODUCTO ---
+        document.getElementById('product-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const unds = parseFloat(document.getElementById('unds_por_empaque').value) || 1;
+            const emp = parseFloat(document.getElementById('cant_empaques').value) || 0;
+            const suel = parseFloat(document.getElementById('cant_sueltos').value) || 0;
+            const costoEmp = parseFloat(document.getElementById('costo_empaque').value) || 0;
+            const pVenta = parseFloat(document.getElementById('precio_venta').value) || 0;
+            
+            const totalUnds = (emp * unds) + suel;
+            const costoUnit = unds > 0 ? costoEmp / unds : 0;
+            const costoTotal = totalUnds * costoUnit;
+            const tipoEmp = document.getElementById('tipo_empaque').value;
+
+            const producto = {
+                ID: document.getElementById('producto_id').value || 'BOD_' + Date.now(),
+                Codigo: document.getElementById('codigo').value.trim(),
+                Categoria: document.getElementById('categoria').value,
+                Nombre: document.getElementById('nombre').value.trim().toUpperCase(),
+                Tipo_Empaque: tipoEmp,
+                Presentacion: tipoEmp === 'Unidad' ? 'Suelto' : (tipoEmp + " x " + unds).trim(),
+                Unds_Por_Empaque: unds,
+                Cant_Empaques: emp,
+                Cant_Sueltos: suel,
+                Total_Unidades: totalUnds,
+                Costo_Empaque: costoEmp,
+                Costo_Unitario: costoUnit,
+                Precio_Venta: pVenta,
+                Costo_Total: costoTotal
+            };
+
+            mostrarCarga(true);
+            try {
+                if (googleScriptURL) {
+                    const resp = await fetch(googleScriptURL, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'save', product: producto }),
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                    });
+                    const result = await resp.json();
+                    if(result.status === 'success') {
+                        mostrarToast("Guardado correctamente", "success");
+                        await cargarInventarioCore();
+                    } else throw new Error(result.message);
+                } else {
+                    const idx = inventario.findIndex(p => p.ID === producto.ID);
+                    if (idx >= 0) inventario[idx] = producto; else inventario.push(producto);
+                    localStorage.setItem('bodega_local_cache', JSON.stringify(inventario));
+                    renderizarTabla();
+                    mostrarToast("Guardado en Local", "info");
+                }
+                limpiarFormulario();
+            } catch (error) {
+                mostrarToast("Error: " + error.message, "error");
+            } finally {
+                mostrarCarga(false);
+            }
+        });
+
+        // --- AUTOCOMPLETADO AL ESCANEAR/ESCRIBIR ---
+        document.getElementById('codigo').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault(); 
+                buscarProductoPorCodigo(this.value.trim());
+            }
+        });
+
+        function buscarProductoPorCodigo(cod) {
+            if(!cod) return;
+            const prodExistente = inventario.find(p => p.Codigo === cod);
+            if (prodExistente) {
+                editarFilaFormulario(prodExistente.ID);
+                mostrarToast("Producto encontrado en inventario. Actualiza el stock.", "info");
+                return;
+            }
+            const enCatalogo = catalogoBase.find(p => p.Codigo == cod);
+            if (enCatalogo) {
+                llenarDesdeCatalogo(enCatalogo);
+                document.getElementById('cant_empaques').focus();
+                mostrarToast("Datos autocompletados", "success");
+            } else {
+                document.getElementById('nombre').focus();
+                mostrarToast("Código Nuevo. Registra los datos.", "warning");
+            }
+        }
+
+        function autocompletarDesdeNombre() {
+            const val = document.getElementById('nombre').value.toUpperCase();
+            const coincidencia = catalogoBase.find(p => p.Nombre.toUpperCase() === val);
+            if(coincidencia) {
+                llenarDesdeCatalogo(coincidencia);
+                document.getElementById('cant_empaques').focus();
+            }
+        }
+
+        function llenarDesdeCatalogo(item) {
+            document.getElementById('nombre').value = item.Nombre;
+            document.getElementById('categoria').value = item.Categoria;
+            document.getElementById('tipo_empaque').value = item.Tipo_Empaque;
+            document.getElementById('unds_por_empaque').value = item.Unds_Por_Empaque;
+            if(item.Codigo) document.getElementById('codigo').value = item.Codigo;
+            calcularDinamicamente();
+        }
+
+        // --- EDICIÓN Y LIMPIEZA DE FORMULARIO ---
+        function editarFilaFormulario(id) {
+            const prod = inventario.find(p => p.ID === id);
+            if(!prod) return;
+
+            document.getElementById('producto_id').value = prod.ID;
+            document.getElementById('codigo').value = prod.Codigo || '';
+            document.getElementById('categoria').value = prod.Categoria || 'Abarrotes';
+            document.getElementById('nombre').value = prod.Nombre || '';
+            document.getElementById('tipo_empaque').value = prod.Tipo_Empaque || 'Caja';
+            document.getElementById('unds_por_empaque').value = prod.Unds_Por_Empaque || 1;
+            document.getElementById('cant_empaques').value = prod.Cant_Empaques || 0;
+            document.getElementById('cant_sueltos').value = prod.Cant_Sueltos || 0;
+            document.getElementById('costo_empaque').value = prod.Costo_Empaque || 0;
+            document.getElementById('precio_venta').value = prod.Precio_Venta || 0;
+
+            calcularDinamicamente();
+            cambiarPestana('tab-registro');
+            
+            // Cambiar aspecto del botón para indicar EDICIÓN
+            const btn = document.getElementById('btn-submit');
+            btn.innerHTML = '<i class="fas fa-edit text-xl"></i> <span>Actualizar Producto</span>';
+            btn.className = "w-full py-4 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-2xl text-lg shadow-lg shadow-amber-500/20 flex items-center justify-center gap-3 transition-all active:scale-[0.98]";
+            
+            // Hacer scroll suave hacia arriba
+            document.getElementById('tab-registro').scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function limpiarFormulario() {
+            document.getElementById('product-form').reset();
+            document.getElementById('producto_id').value = '';
+            document.getElementById('tipo_empaque').value = 'Caja';
+            document.getElementById('categoria').value = 'Abarrotes';
+            calcularDinamicamente();
+            
+            // Restaurar botón a modo GUARDAR
+            const btn = document.getElementById('btn-submit');
+            btn.innerHTML = '<i class="fas fa-check-circle text-xl"></i> <span>Guardar Producto</span>';
+            btn.className = "w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl text-lg shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-3 transition-all active:scale-[0.98]";
+        }
+
+        // --- ELIMINAR PRODUCTO ---
+        async function eliminarRegistro(id) {
+            if(!confirm("⚠️ ¿Estás seguro de eliminar este producto del inventario?")) return;
+            mostrarCarga(true);
+            try {
+                if (googleScriptURL) {
+                    const resp = await fetch(googleScriptURL, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'delete', product: { ID: id } }),
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                    });
+                    const result = await resp.json();
+                    if(result.status === 'success') {
+                        mostrarToast("Producto eliminado", "success");
+                        await cargarInventarioCore();
+                    } else throw new Error(result.message);
+                } else {
+                    inventario = inventario.filter(p => p.ID !== id);
+                    localStorage.setItem('bodega_local_cache', JSON.stringify(inventario));
+                    renderizarTabla();
+                    mostrarToast("Eliminado Localmente", "info");
+                }
+            } catch(e) { mostrarToast("Error: No se pudo eliminar", "error"); } 
+            finally { mostrarCarga(false); }
+        }
+
+        // --- RENDERIZAR TABLA Y ESTADÍSTICAS ---
+        function renderizarTabla() {
+            const tbody = document.getElementById('tabla-body');
+            const term = document.getElementById('buscador').value.toLowerCase();
+            const emptyState = document.getElementById('estado-vacio');
+            
+            let totalUnidadesGlob = 0, costoTotalGlob = 0, ventaTotalGlob = 0;
+            const filtrados = inventario.filter(p => 
+                (p.Nombre || '').toLowerCase().includes(term) || 
+                (p.Codigo || '').toLowerCase().includes(term) ||
+                (p.Categoria || '').toLowerCase().includes(term)
+            );
+
+            tbody.innerHTML = '';
+            if(filtrados.length === 0) {
+                emptyState.classList.remove('hidden'); emptyState.classList.add('flex');
+            } else {
+                emptyState.classList.add('hidden'); emptyState.classList.remove('flex');
+                
+                filtrados.forEach((prod) => {
+                    const cEmp = parseFloat(prod.Cant_Empaques) || 0;
+                    const cSue = parseFloat(prod.Cant_Sueltos) || 0;
+                    const totUnds = parseFloat(prod.Total_Unidades) || 0;
+                    const cUni = parseFloat(prod.Costo_Unitario) || 0;
+                    const pVenta = parseFloat(prod.Precio_Venta) || 0;
+                    const cTot = parseFloat(prod.Costo_Total) || 0;
+                    const vTot = totUnds * pVenta; 
+
+                    totalUnidadesGlob += totUnds;
+                    costoTotalGlob += cTot;
+                    ventaTotalGlob += vTot;
+
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-50/80 transition-colors group";
+                    tr.innerHTML = `
+                        <td class="px-5 py-4">
+                            <div class="text-[9px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 inline-block px-2 py-0.5 rounded uppercase mb-1.5">${prod.Categoria || 'Bodega'}</div>
+                            <div class="font-bold text-slate-800 text-sm leading-tight">${prod.Nombre || '-'}</div>
+                            <div class="text-[10px] text-slate-400 font-mono mt-1"><i class="fas fa-barcode mr-1 opacity-50"></i>${prod.Codigo || 'S/N'}</div>
+                        </td>
+                        <td class="px-5 py-4 text-center">
+                            <div class="inline-flex flex-col items-center">
+                                <span class="text-base font-black text-slate-800">${totUnds % 1 === 0 ? totUnds : totUnds.toFixed(2)} <span class="text-xs text-slate-400 font-bold">U</span></span>
+                                <span class="text-[10px] font-medium text-slate-500 mt-0.5">${cEmp} ${prod.Tipo_Empaque} + ${cSue} s.</span>
+                            </div>
+                        </td>
+                        <td class="px-5 py-4 text-right">
+                            <div class="text-[11px] font-bold text-slate-500 mb-0.5">Costo: S/ ${cUni.toFixed(2)}</div>
+                            <div class="text-[11px] font-bold text-emerald-600 mb-1">Venta: S/ ${pVenta.toFixed(2)}</div>
+                            <div class="font-black text-slate-800 text-xs pt-1 border-t border-slate-100">Inv: S/ ${cTot.toFixed(2)}</div>
+                        </td>
+                        <td class="px-5 py-4 text-center">
+                            <div class="flex justify-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                <button onclick="editarFilaFormulario('${prod.ID}')" class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-colors flex items-center justify-center" title="Editar">
+                                    <i class="fas fa-pen text-sm"></i>
+                                </button>
+                                <button onclick="eliminarRegistro('${prod.ID}')" class="w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-colors flex items-center justify-center" title="Eliminar">
+                                    <i class="fas fa-trash text-sm"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            // Actualizar Dashboards
+            document.getElementById('stat-productos').innerText = inventario.length;
+            document.getElementById('stat-unidades').innerText = totalUnidadesGlob % 1 === 0 ? totalUnidadesGlob : totalUnidadesGlob.toFixed(2);
+            document.getElementById('stat-costo').innerText = 'S/ ' + costoTotalGlob.toFixed(2);
+            document.getElementById('stat-venta').innerText = 'S/ ' + ventaTotalGlob.toFixed(2);
+        }
+
+        // --- CONEXIÓN CON GOOGLE SHEETS ---
+        async function cargarDesdeGoogleSheets() {
+            if (!googleScriptURL) return;
+            mostrarCarga(true);
+            const icon = document.getElementById('icon-refresh');
+            if(icon) icon.classList.add('fa-spin');
+            
+            try {
+                // Traer el catálogo primero
+                const resCat = await fetch(googleScriptURL + "?action=catalog");
+                catalogoBase = await resCat.json();
+                actualizarDatalistProductos();
+
+                // Traer inventario real
+                await cargarInventarioCore();
+                mostrarToast("Nube Sincronizada", "success");
+            } catch (error) {
+                mostrarToast("Fallo al conectar con Google Sheets", "error");
+            } finally {
+                mostrarCarga(false);
+                if(icon) icon.classList.remove('fa-spin');
+            }
+        }
+
+        async function cargarInventarioCore() {
+            const response = await fetch(googleScriptURL + "?action=read");
+            inventario = await response.json();
+            localStorage.setItem('bodega_local_cache', JSON.stringify(inventario));
+            renderizarTabla();
+        }
+
+        function actualizarDatalistProductos() {
+            const list = document.getElementById('productos_list');
+            list.innerHTML = '';
+            catalogoBase.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.Nombre;
+                list.appendChild(opt);
+            });
+        }
+
+        // --- UTILIDADES ---
+        function actualizarIndicadorConexion() {
+            const t = document.getElementById('sync-text');
+            const p = document.getElementById('sync-ping');
+            const d = document.getElementById('sync-dot');
+            const b = document.getElementById('sync-status');
+            
+            if (googleScriptURL) {
+                t.innerText = "Nube Conectada";
+                p.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75";
+                d.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500";
+                b.className = "flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-full border border-emerald-100";
+                t.className = "text-xs font-bold text-emerald-700";
+            } else {
+                t.innerText = "Falta Link GS";
+                p.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75";
+                d.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500";
+                b.className = "flex items-center gap-2 px-3 py-1.5 bg-red-50 rounded-full border border-red-100";
+                t.className = "text-xs font-bold text-red-700";
+            }
+        }
+
+        function mostrarCarga(mostrar) {
+            const o = document.getElementById('loading-overlay');
+            if (mostrar) o.classList.remove('hidden'); else o.classList.add('hidden');
+        }
+
+        function mostrarToast(msg, tipo = "info") {
+            const c = document.getElementById('toast-container');
+            const t = document.createElement('div');
+            
+            let bg="bg-slate-800", text="text-white", icon="fa-info-circle text-blue-400";
+            if(tipo==="success"){ bg="bg-white"; text="text-slate-800 border-l-4 border-emerald-500"; icon="fa-check-circle text-emerald-500"; }
+            if(tipo==="error"){ bg="bg-red-900"; text="text-white"; icon="fa-exclamation-triangle text-red-400"; }
+            if(tipo==="warning"){ bg="bg-amber-50"; text="text-amber-900 border border-amber-200"; icon="fa-exclamation-circle text-amber-500"; }
+            
+            t.className = `toast-enter flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg ${bg} ${text} text-sm font-bold pointer-events-auto`;
+            t.innerHTML = `<i class="fas ${icon} text-xl"></i> <span>${msg}</span>`;
+            
+            c.appendChild(t);
+            setTimeout(() => { 
+                t.style.opacity = '0'; t.style.transform = 'translateX(10px)'; t.style.transition = 'all 0.3s ease';
+                setTimeout(() => t.remove(), 300); 
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
