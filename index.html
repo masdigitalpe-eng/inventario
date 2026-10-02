@@ -54,8 +54,9 @@
             border-bottom: 1px solid rgba(226, 232, 240, 0.8);
         }
 
-        #reader video { border-radius: 1rem; object-fit: cover; width: 100%; }
-        #reader { border: none !important; }
+        /* Arreglo cámara: No forzamos tamaños raros para que el lector funcione exacto */
+        #reader { border: none !important; width: 100%; }
+        #reader video { border-radius: 1rem; width: 100%; }
     </style>
 </head>
 <body class="text-slate-800 min-h-screen flex flex-col selection:bg-indigo-100 selection:text-indigo-900 relative">
@@ -104,15 +105,15 @@
             <form id="product-form" class="space-y-6">
                 <input type="hidden" id="producto_id">
                 
-                <!-- SECCIÓN: PRODUCTO E IDENTIFICACIÓN -->
-                <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+                <!-- SECCIÓN: PRODUCTO E IDENTIFICACIÓN (SOLUCIONADO OVERFLOW) -->
+                <!-- Quitamos el 'overflow-hidden' y usamos border-l-8 para que las sugerencias no se corten -->
+                <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 border-l-8 border-l-blue-500 relative">
                     <div class="flex justify-between items-center mb-5">
                         <h3 class="text-sm font-black text-slate-400 uppercase tracking-wider flex items-center gap-2">
                             <i class="fas fa-box-open text-blue-500"></i> 1. Datos del Producto
                         </h3>
                         <button type="button" onclick="limpiarFormulario()" class="text-xs font-bold text-slate-400 hover:text-red-500 transition-colors bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-                            <i class="fas fa-broom"></i> Limpiar todo
+                            <i class="fas fa-broom"></i> Limpiar
                         </button>
                     </div>
                     
@@ -123,7 +124,7 @@
                             <div class="flex gap-2">
                                 <div class="relative flex-grow">
                                     <i class="fas fa-barcode absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl"></i>
-                                    <input type="text" id="codigo" class="input-app pl-12 text-lg font-mono tracking-widest uppercase" placeholder="Escanea o escribe..." autocomplete="off">
+                                    <input type="text" id="codigo" class="input-app pl-12 text-lg font-mono tracking-widest uppercase" placeholder="Escanear o escribir..." autocomplete="off">
                                 </div>
                                 <button type="button" onclick="abrirCamara()" class="bg-slate-800 hover:bg-slate-900 text-white px-5 rounded-xl transition-colors shadow-md flex items-center justify-center">
                                     <i class="fas fa-camera text-xl"></i>
@@ -132,15 +133,15 @@
                         </div>
                         
                         <!-- Buscador Inteligente por Nombre -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 relative z-50">
                             <div class="relative">
                                 <label class="block text-xs font-black text-slate-600 mb-2">NOMBRE DEL PRODUCTO</label>
                                 <div class="relative">
                                     <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
                                     <input type="text" id="nombre" required class="input-app pl-12 text-lg" placeholder="Ej. Leche Gloria" autocomplete="off">
                                 </div>
-                                <!-- Caja de sugerencias (Autocompletar) -->
-                                <div id="sugerencias-container" class="absolute z-50 w-full bg-white rounded-xl shadow-2xl border border-slate-100 max-h-60 overflow-y-auto hidden mt-1">
+                                <!-- Caja de sugerencias (Ahora flotará libremente sin cortarse) -->
+                                <div id="sugerencias-container" class="absolute z-[100] w-full bg-white rounded-xl shadow-2xl border border-slate-200 max-h-60 overflow-y-auto hidden mt-2">
                                     <ul id="sugerencias-lista" class="divide-y divide-slate-100"></ul>
                                 </div>
                             </div>
@@ -163,9 +164,8 @@
                     </div>
                 </div>
 
-                <!-- SECCIÓN: STOCK Y EMPAQUE -->
-                <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-1 h-full bg-amber-500"></div>
+                <!-- SECCIÓN: STOCK Y EMPAQUE (DUPLICADOS ELIMINADOS Y CELDAS VACÍAS) -->
+                <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 border-l-8 border-l-amber-500 relative relative z-10">
                     <h3 class="text-sm font-black text-slate-400 uppercase tracking-wider flex items-center gap-2 mb-6">
                         <i class="fas fa-cubes text-amber-500"></i> 2. Stock Físico (Conteo)
                     </h3>
@@ -192,32 +192,21 @@
                             </div>
                             <div class="w-full sm:w-48">
                                 <label class="block text-xs font-black text-amber-700 mb-2">¿CUÁNTAS UNIDADES TRAE?</label>
-                                <input type="number" id="unds_por_empaque" required min="1" placeholder="1" class="input-app bg-white text-center font-black text-xl text-amber-900 border-amber-200 focus:border-amber-500" oninput="calcularDinamicamente()" onfocus="this.select()">
+                                <!-- Valor inicial vacío, se selecciona al tocar -->
+                                <input type="number" id="unds_por_empaque" required min="1" placeholder="Ej: 6" class="input-app bg-white text-center font-black text-xl text-amber-900 border-amber-200 focus:border-amber-500" oninput="calcularDinamicamente()" onclick="this.select()">
                             </div>
                         </div>
                     </div>
 
-                    <!-- Cantidades (Cajas y Sueltos) -->
+                    <!-- Cantidades (Cajas y Sueltos) - ¡SOLO HAY UNO AHORA! -->
                     <div class="grid grid-cols-2 gap-4 md:gap-6 mb-6">
                         <div class="bg-slate-50 border-2 border-slate-100 rounded-2xl p-5 flex flex-col items-center justify-center focus-within:border-amber-400 focus-within:bg-amber-50 transition-colors shadow-inner">
                             <label class="text-[11px] font-black text-slate-500 uppercase tracking-wider mb-3 text-center">Cajas / Paquetes Enteros</label>
-                            <input type="number" id="cant_empaques" required min="0" step="0.01" placeholder="0" class="w-full bg-transparent text-5xl md:text-6xl font-black text-center text-slate-800 outline-none p-0" oninput="calcularDinamicamente()" onfocus="this.select()">
+                            <input type="number" id="cant_empaques" min="0" step="0.01" placeholder="0" class="w-full bg-transparent text-5xl md:text-6xl font-black text-center text-slate-800 outline-none p-0" oninput="calcularDinamicamente()" onclick="this.select()">
                         </div>
                         <div class="bg-slate-50 border-2 border-slate-100 rounded-2xl p-5 flex flex-col items-center justify-center focus-within:border-blue-400 focus-within:bg-blue-50 transition-colors shadow-inner">
                             <label class="text-[11px] font-black text-slate-500 uppercase tracking-wider mb-3 text-center">Unidades Sueltas</label>
-                            <input type="number" id="cant_sueltos" required min="0" step="0.01" placeholder="0" class="w-full bg-transparent text-5xl md:text-6xl font-black text-center text-slate-800 outline-none p-0" oninput="calcularDinamicamente()" onfocus="this.select()">
-                        </div>
-                    </div>
-
-                    <!-- Cantidades (Cajas y Sueltos) -->
-                    <div class="grid grid-cols-2 gap-4 md:gap-6 mb-6">
-                        <div class="bg-slate-50 border-2 border-slate-100 rounded-2xl p-5 flex flex-col items-center justify-center focus-within:border-amber-400 focus-within:bg-amber-50 transition-colors shadow-inner">
-                            <label class="text-[11px] font-black text-slate-500 uppercase tracking-wider mb-3 text-center">Cajas / Paquetes Enteros</label>
-                            <input type="number" id="cant_empaques" required min="0" value="0" step="0.01" class="w-full bg-transparent text-5xl md:text-6xl font-black text-center text-slate-800 outline-none p-0" oninput="calcularDinamicamente()">
-                        </div>
-                        <div class="bg-slate-50 border-2 border-slate-100 rounded-2xl p-5 flex flex-col items-center justify-center focus-within:border-blue-400 focus-within:bg-blue-50 transition-colors shadow-inner">
-                            <label class="text-[11px] font-black text-slate-500 uppercase tracking-wider mb-3 text-center">Unidades Sueltas</label>
-                            <input type="number" id="cant_sueltos" required min="0" value="0" step="0.01" class="w-full bg-transparent text-5xl md:text-6xl font-black text-center text-slate-800 outline-none p-0" oninput="calcularDinamicamente()">
+                            <input type="number" id="cant_sueltos" min="0" step="0.01" placeholder="0" class="w-full bg-transparent text-5xl md:text-6xl font-black text-center text-slate-800 outline-none p-0" oninput="calcularDinamicamente()" onclick="this.select()">
                         </div>
                     </div>
                     
@@ -231,8 +220,7 @@
                 </div>
 
                 <!-- SECCIÓN: FINANZAS Y COSTOS -->
-                <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
+                <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 border-l-8 border-l-emerald-500 relative">
                     <h3 class="text-sm font-black text-slate-400 uppercase tracking-wider flex items-center gap-2 mb-6">
                         <i class="fas fa-coins text-emerald-500"></i> 3. Dinero (Soles S/)
                     </h3>
@@ -242,14 +230,14 @@
                             <label class="block text-xs font-black text-slate-600 mb-2">COSTO DE LA CAJA / PAQUETE ENTERO</label>
                             <div class="relative">
                                 <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-lg">S/</span>
-                                <input type="number" id="costo_empaque" required min="0" step="0.01" placeholder="0.00" class="input-app pl-12 text-xl font-bold" oninput="calcularDinamicamente()" onfocus="this.select()">
+                                <input type="number" id="costo_empaque" required min="0" step="0.01" placeholder="0.00" class="input-app pl-12 text-xl font-bold" oninput="calcularDinamicamente()" onclick="this.select()">
                             </div>
                         </div>
                         <div>
                             <label class="block text-xs font-black text-emerald-700 mb-2">PRECIO DE VENTA (POR UNIDAD)</label>
                             <div class="relative">
                                 <span class="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-600 font-bold text-lg">S/</span>
-                                <input type="number" id="precio_venta" required min="0" step="0.01" placeholder="0.00" class="input-app pl-12 text-xl font-bold bg-emerald-50 border-emerald-200 text-emerald-900 focus:border-emerald-500 focus:bg-white" oninput="calcularDinamicamente()" onfocus="this.select()">
+                                <input type="number" id="precio_venta" required min="0" step="0.01" placeholder="0.00" class="input-app pl-12 text-xl font-bold bg-emerald-50 border-emerald-200 text-emerald-900 focus:border-emerald-500 focus:bg-white" oninput="calcularDinamicamente()" onclick="this.select()">
                             </div>
                         </div>
                     </div>
@@ -266,11 +254,11 @@
                         </div>
                     </div>
 
-                    <!-- VALOR TOTAL DEL STOCK (El cálculo pedido) -->
+                    <!-- VALOR TOTAL DEL STOCK (El cálculo exacto) -->
                     <div class="mt-6 bg-indigo-50 rounded-2xl p-5 border border-indigo-100 flex flex-col md:flex-row justify-between items-center gap-3">
                         <div>
                             <p class="text-[11px] font-black text-indigo-600 uppercase tracking-wider">Costo Total del Stock Actual</p>
-                            <p class="text-[10px] font-medium text-indigo-400 mt-1">Todas tus unidades multiplicadas por el costo real</p>
+                            <p class="text-[10px] font-medium text-indigo-400 mt-1">Costo unitario x Total de unidades</p>
                         </div>
                         <div class="text-center md:text-right">
                             <p id="lbl_costo_total_stock" class="text-3xl md:text-4xl font-black text-indigo-700">S/ 0.00</p>
@@ -330,9 +318,9 @@
         </div>
     </main>
 
-    <!-- MODAL ESCÁNER DE CÁMARA REAL -->
-    <div id="modal-escaner" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-50 flex flex-col items-center justify-center hidden opacity-0 transition-opacity duration-300">
-        <div class="w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl m-4" id="modal-escaner-content">
+    <!-- MODAL ESCÁNER DE CÁMARA REAL (RECTANGULAR Y SOLUCIONADO) -->
+    <div id="modal-escaner" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex flex-col items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="w-full max-w-lg bg-white rounded-3xl overflow-hidden shadow-2xl m-4" id="modal-escaner-content">
             <div class="px-5 py-4 flex justify-between items-center border-b border-slate-100 bg-slate-50">
                 <h3 class="font-black text-slate-800 flex items-center gap-2">
                     <i class="fas fa-qrcode text-indigo-500 text-xl"></i> Escáner de Código
@@ -341,25 +329,25 @@
                     <i class="fas fa-times text-lg"></i>
                 </button>
             </div>
-            <div class="p-2 bg-black relative">
-                <div id="reader" class="w-full rounded-2xl overflow-hidden bg-black flex items-center justify-center min-h-[350px]"></div>
-                <!-- Linea láser animada -->
-                <div class="absolute top-1/2 left-6 right-6 h-1 bg-red-500/80 shadow-[0_0_15px_red] z-10 animate-[pulse_1s_ease-in-out_infinite]"></div>
+            
+            <div class="p-4 bg-black relative flex items-center justify-center min-h-[250px]">
+                <!-- Aquí se inyecta la cámara. Sin forzar tamaños para evitar errores en iOS/Android -->
+                <div id="reader" class="w-full overflow-hidden bg-black flex items-center justify-center"></div>
             </div>
+            
             <div class="px-5 py-5 text-center bg-white">
-                <p class="text-sm text-slate-600 font-bold uppercase tracking-wider">Apunta al código de barras</p>
+                <p class="text-sm text-slate-600 font-bold uppercase tracking-wider">APUNTA AL CÓDIGO DE BARRAS</p>
                 <p class="text-xs text-slate-400 mt-1">Se leerá automáticamente (Hará BEEP)</p>
             </div>
         </div>
     </div>
 
     <!-- Contenedor para Notificaciones Flotantes (Toasts) -->
-    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 pointer-events-none"></div>
+    <div id="toast-container" class="fixed bottom-6 right-6 z-[200] flex flex-col gap-3 pointer-events-none"></div>
 
     <script>
         // =======================================================================
-        // 🔗 PEGA AQUÍ TU LINK DE GOOGLE APPS SCRIPT (Web App URL)
-        // IMPORTANTE: El link debe terminar en "/exec"
+        // 🔗 LINK DE GOOGLE APPS SCRIPT (Web App URL)
         // =======================================================================
         const MI_URL_DE_GOOGLE_SHEETS = "https://script.google.com/macros/s/AKfycbzflCJT15Iq-X9zMWpLLecdRLDNmw7L8ZEaSD61RAJ-vEsdwfvZ0ULOUL8bIpocMhFFJg/exec"; 
         // =======================================================================
@@ -368,7 +356,7 @@
         let catalogoBase = [];
         let html5QrCode = null;
         let googleScriptURL = MI_URL_DE_GOOGLE_SHEETS.trim();
-        let audioCtx = null; // Variable para el sonido del escáner
+        let audioCtx = null; 
         
         document.addEventListener('DOMContentLoaded', () => {
             verificarLinkYConectar();
@@ -376,24 +364,17 @@
 
         function verificarLinkYConectar() {
             if (googleScriptURL) {
-                if (googleScriptURL.includes("/edit")) {
-                    mostrarToast("⚠️ ERROR: Pegaste el link del editor. Debes publicar como Web App y pegar el link que termina en /exec", "error");
-                    actualizarIndicadorConexion(false, "Link Incorrecto");
-                } else {
-                    cargarDesdeGoogleSheets();
-                }
+                cargarDesdeGoogleSheets();
             } else {
                 actualizarIndicadorConexion(false, "Sin Enlace GS");
-                // Cargar datos locales de prueba si no hay nube
                 const localData = localStorage.getItem('bodega_local_cache');
                 if (localData) { inventario = JSON.parse(localData); renderizarTabla(); }
-                mostrarToast("Trabajando de forma local (Sin Nube). Pega tu link en el código para conectar.", "warning");
+                mostrarToast("Trabajando de forma local (Sin Nube)", "warning");
             }
         }
 
         // --- SISTEMA DE SONIDO BEEP (CÁMARA) ---
         function inicializarAudio() {
-            // Desbloquea el audio en navegadores móviles al hacer clic en el botón
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             }
@@ -409,8 +390,8 @@
                 const gain = audioCtx.createGain();
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
-                osc.type = 'square'; // Sonido idéntico a escáner de caja registradora
-                osc.frequency.setValueAtTime(880, audioCtx.currentTime); // Tono alto
+                osc.type = 'square'; 
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime); 
                 gain.gain.setValueAtTime(0, audioCtx.currentTime);
                 gain.gain.linearRampToValueAtTime(1, audioCtx.currentTime + 0.02);
                 gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
@@ -419,47 +400,51 @@
             } catch(e) { console.log("Audio no soportado"); }
         }
 
-        // --- CÁMARA ESCÁNER ---
+        // --- CÁMARA ESCÁNER (SOLUCIONADO RETRASO Y RESOLUCIÓN) ---
         function abrirCamara() {
-            inicializarAudio(); // Activar permiso de sonido del navegador
+            inicializarAudio(); // Activa permiso de audio
             
             const modal = document.getElementById('modal-escaner');
-            modal.classList.remove('hidden');
-            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+            modal.classList.remove('hidden'); // 1. Mostrar ventana
             
-            if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
-            
-            // SOLUCIÓN DEFINITIVA: 
-            // Eliminamos el "qrbox" (el recorte interno). Ahora el sistema escaneará 
-            // TODA la imagen que vea la cámara. Si el código está en la pantalla, lo leerá.
-            // Bajamos los FPS a 10 para darle tiempo a la cámara de enfocar (autofocus).
-            const configEscaner = { 
-                fps: 10, 
-                formatsToSupport: [
-                    Html5QrcodeSupportedFormats.EAN_13,
-                    Html5QrcodeSupportedFormats.EAN_8,
-                    Html5QrcodeSupportedFormats.UPC_A,
-                    Html5QrcodeSupportedFormats.UPC_E,
-                    Html5QrcodeSupportedFormats.CODE_128,
-                    Html5QrcodeSupportedFormats.CODE_39
-                ]
-            };
-            
-            html5QrCode.start(
-                { facingMode: "environment" }, 
-                configEscaner,
-                (decodedText) => {
-                    playBeep(); // Suena fuerte el BEEP de éxito
+            // 2. Esperar 150ms a que la ventana esté 100% dibujada en pantalla
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                
+                if(!html5QrCode) {
+                    html5QrCode = new Html5Qrcode("reader");
+                }
+                
+                // 3. Encender cámara (Ahora sí sabe de qué tamaño es la pantalla)
+                html5QrCode.start(
+                    { facingMode: "environment" }, // Cámara trasera estándar (Evita bloqueos de iPhone)
+                    { 
+                        fps: 10,
+                        // El qrbox crea el rectángulo de escaneo. Usamos un rectángulo ancho para EAN-13
+                        qrbox: function(viewfinderWidth, viewfinderHeight) {
+                            return { width: viewfinderWidth * 0.85, height: 150 };
+                        },
+                        formatsToSupport: [
+                            Html5QrcodeSupportedFormats.EAN_13,
+                            Html5QrcodeSupportedFormats.EAN_8,
+                            Html5QrcodeSupportedFormats.UPC_A,
+                            Html5QrcodeSupportedFormats.UPC_E,
+                            Html5QrcodeSupportedFormats.CODE_128
+                        ]
+                    },
+                    (decodedText) => {
+                        playBeep(); // Suena fuerte
+                        cerrarEscaner();
+                        document.getElementById('codigo').value = decodedText;
+                        buscarProductoPorCodigo(decodedText);
+                    },
+                    (errorMessage) => { /* Ignora errores de escaneo buscando foco */ }
+                ).catch(err => {
+                    console.error("Error al iniciar cámara:", err);
                     cerrarEscaner();
-                    document.getElementById('codigo').value = decodedText;
-                    buscarProductoPorCodigo(decodedText);
-                },
-                (errorMessage) => { /* Ignorar avisos mientras busca la caja */ }
-            ).catch(err => {
-                cerrarEscaner();
-                console.error("Error cámara:", err);
-                mostrarToast("Debes otorgar permisos de cámara en tu navegador para usar el escáner.", "error");
-            });
+                    mostrarToast("Permite el acceso a la cámara en tu navegador.", "error");
+                });
+            }, 150); // El retraso salva el escáner
         }
 
         function cerrarEscaner() {
@@ -471,7 +456,7 @@
             setTimeout(() => { modal.classList.add('hidden'); }, 300);
         }
 
-        // --- AUTOCOMPLETADO INTELIGENTE (Buscador tipo Google) ---
+        // --- AUTOCOMPLETADO INTELIGENTE (Solucionado corte visual) ---
         const inputNombre = document.getElementById('nombre');
         const sugerenciasContenedor = document.getElementById('sugerencias-container');
         const sugerenciasLista = document.getElementById('sugerencias-lista');
@@ -479,20 +464,19 @@
         inputNombre.addEventListener('input', function() {
             const texto = this.value.toLowerCase().trim();
             
-            // Si hay menos de 2 letras, no buscar
             if (texto.length < 2) {
                 sugerenciasContenedor.classList.add('hidden');
                 return;
             }
             
-            // Filtrar productos del catálogo descargado
+            // Buscar en el catálogo que descargó de Google Sheets
             const filtrados = catalogoBase.filter(p => p.Nombre.toLowerCase().includes(texto));
             
             if (filtrados.length > 0) {
                 sugerenciasLista.innerHTML = filtrados.map(p => `
                     <li class="px-4 py-3 hover:bg-indigo-50 cursor-pointer transition-colors flex flex-col" onclick='seleccionarSugerencia(${JSON.stringify(p).replace(/'/g, "&#39;")})'>
                         <span class="font-bold text-slate-800 text-sm">${p.Nombre}</span>
-                        <span class="text-[10px] text-slate-500 font-bold uppercase">${p.Categoria} • Presentación: ${p.Presentacion || p.Tipo_Empaque}</span>
+                        <span class="text-[10px] text-slate-500 font-bold uppercase">${p.Categoria} • ${p.Presentacion || p.Tipo_Empaque}</span>
                     </li>
                 `).join('');
                 sugerenciasContenedor.classList.remove('hidden');
@@ -501,60 +485,56 @@
             }
         });
 
-        // Ocultar sugerencias si haces clic fuera
+        // Ocultar al hacer clic fuera
         document.addEventListener('click', function(e) {
             if (!e.target.closest('#sugerencias-container') && e.target.id !== 'nombre') {
                 sugerenciasContenedor.classList.add('hidden');
             }
         });
 
-        // Cuando el usuario hace clic en una sugerencia
         function seleccionarSugerencia(item) {
             document.getElementById('nombre').value = item.Nombre;
             
-            // Intentar seleccionar la categoría, si no existe, poner 'Otros'
             const selectCat = document.getElementById('categoria');
             let catExiste = Array.from(selectCat.options).some(opt => opt.value === item.Categoria);
             selectCat.value = catExiste ? item.Categoria : 'Otros';
             
             document.getElementById('tipo_empaque').value = item.Tipo_Empaque || 'Caja';
-            document.getElementById('unds_por_empaque').value = item.Unds_Por_Empaque || 1;
+            document.getElementById('unds_por_empaque').value = item.Unds_Por_Empaque || '';
             
             if(item.Codigo) document.getElementById('codigo').value = item.Codigo;
             
             sugerenciasContenedor.classList.add('hidden');
-            
-            // Mover el foco a las cajas para contar rápido
             document.getElementById('cant_empaques').focus();
             calcularDinamicamente();
-            mostrarToast("Producto encontrado en Catálogo", "success");
+            mostrarToast("Catálogo aplicado", "success");
         }
 
-        // Búsqueda por Código de Barras (Enter o Escáner)
+        // Buscar Código con Enter
         document.getElementById('codigo').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') { e.preventDefault(); buscarProductoPorCodigo(this.value.trim()); }
         });
 
         function buscarProductoPorCodigo(cod) {
             if(!cod) return;
-            // 1. Buscar en inventario local primero
+            // 1. Busca en inventario local (si ya lo habías guardado)
             const prodExistente = inventario.find(p => p.Codigo === cod);
             if (prodExistente) {
                 editarFilaFormulario(prodExistente.ID);
-                mostrarToast("Producto en Inventario. Listo para actualizar stock.", "info");
+                mostrarToast("Producto encontrado. Listo para actualizar stock.", "info");
                 return;
             }
-            // 2. Buscar en catálogo GS
+            // 2. Busca en catálogo de la Nube (Google Sheets)
             const enCatalogo = catalogoBase.find(p => p.Codigo == cod);
             if (enCatalogo) {
                 seleccionarSugerencia(enCatalogo);
             } else {
                 document.getElementById('nombre').focus();
-                mostrarToast("Código Nuevo. Escribe el nombre del producto.", "warning");
+                mostrarToast("Código Nuevo. Ingresa los datos manualmente.", "warning");
             }
         }
 
-        // --- MATEMÁTICA EXACTA ---
+        // --- MATEMÁTICA EXACTA Y EN VIVO ---
         function calcularDinamicamente() {
             const undsPorEmpaque = parseFloat(document.getElementById('unds_por_empaque').value) || 0;
             const cantEmpaques = parseFloat(document.getElementById('cant_empaques').value) || 0;
@@ -569,13 +549,13 @@
             // 2. Costo Unitario = Costo de Caja / Unidades por Caja
             const costoUnitario = (undsPorEmpaque > 0) ? (costoEmpaque / undsPorEmpaque) : 0;
             
-            // 3. Costo Total del Stock = Total Unidades x Costo Unitario
+            // 3. Costo Total del Stock = Total Unidades x Costo Unitario (La lógica exacta que pediste)
             const costoTotalStock = totalUnidades * costoUnitario;
             
-            // 4. Margen de ganancia
+            // 4. Margen
             const margen = precioVenta - costoUnitario;
 
-            // Renderizar en Pantalla
+            // Pintar resultados
             document.getElementById('lbl_total_unds').innerText = totalUnidades % 1 === 0 ? totalUnidades : totalUnidades.toFixed(2);
             document.getElementById('lbl_costo_unit').innerText = 'S/ ' + costoUnitario.toFixed(2);
             document.getElementById('lbl_costo_total_stock').innerText = 'S/ ' + costoTotalStock.toFixed(2);
@@ -593,7 +573,7 @@
             
             const btnSubmit = document.getElementById('btn-submit');
             const txtOriginal = btnSubmit.innerHTML;
-            btnSubmit.innerHTML = '<i class="fas fa-circle-notch fa-spin text-2xl text-white"></i> <span>Enviando a Nube...</span>';
+            btnSubmit.innerHTML = '<i class="fas fa-circle-notch fa-spin text-2xl text-white"></i> <span>Guardando...</span>';
             btnSubmit.disabled = true;
 
             const unds = parseFloat(document.getElementById('unds_por_empaque').value) || 1;
@@ -607,7 +587,6 @@
             const costoTotal = totalUnds * costoUnit;
             const tipoEmp = document.getElementById('tipo_empaque').value;
 
-            // Construir Objeto Producto
             const producto = {
                 ID: document.getElementById('producto_id').value || 'ID_' + Date.now(),
                 Codigo: document.getElementById('codigo').value.trim(),
@@ -627,33 +606,24 @@
 
             try {
                 if (googleScriptURL) {
-                    // Petición a GS
                     const resp = await fetch(googleScriptURL, {
                         method: 'POST',
                         body: JSON.stringify({ action: 'save', product: producto }),
                         headers: { 'Content-Type': 'text/plain;charset=utf-8' }
                     });
                     
-                    if(!resp.ok) throw new Error("Fallo de red o link incorrecto");
-                    
+                    if(!resp.ok) throw new Error("Fallo de red");
                     const result = await resp.json();
+                    
                     if(result.status === 'success') {
-                        mostrarToast("¡Guardado exitoso en Google Sheets!", "success");
-                        await cargarInventarioCore(); // Recargar tabla
+                        mostrarToast("Guardado en Google Sheets", "success");
+                        await cargarInventarioCore(); 
                         limpiarFormulario();
-                    } else throw new Error(result.message || "Error del servidor GS");
-                } else {
-                    // Si no hay link, guardar en memoria local
-                    const idx = inventario.findIndex(p => p.ID === producto.ID);
-                    if (idx >= 0) inventario[idx] = producto; else inventario.push(producto);
-                    localStorage.setItem('bodega_local_cache', JSON.stringify(inventario));
-                    renderizarTabla();
-                    mostrarToast("Guardado Localmente (Pega tu link para subir a la nube)", "success");
-                    limpiarFormulario();
+                    } else throw new Error(result.message);
                 }
             } catch (error) {
                 console.error(error);
-                mostrarToast("❌ Error al guardar. Verifica que tu link GS tenga permisos de 'Cualquier Persona'.", "error");
+                mostrarToast("No se pudo guardar. Verifica que Google Sheets tenga acceso de 'Cualquier Persona'", "error");
             } finally {
                 btnSubmit.innerHTML = txtOriginal;
                 btnSubmit.disabled = false;
@@ -670,7 +640,7 @@
             document.getElementById('nombre').value = prod.Nombre || '';
             document.getElementById('tipo_empaque').value = prod.Tipo_Empaque || 'Caja';
             
-            // Dejar celdas vacías si vienen con 0 o nulo para facilitar borrado manual
+            // Usamos strings vacíos para que sea fácil editar al hacer clic
             document.getElementById('unds_por_empaque').value = prod.Unds_Por_Empaque || '';
             document.getElementById('cant_empaques').value = prod.Cant_Empaques || '';
             document.getElementById('cant_sueltos').value = prod.Cant_Sueltos || '';
@@ -680,10 +650,9 @@
             calcularDinamicamente();
             cambiarPestana('tab-registro');
             
-            // Cambiar aspecto del botón para indicar Edición
             const btn = document.getElementById('btn-submit');
-            btn.innerHTML = '<i class="fas fa-edit text-2xl text-amber-200"></i> <span>ACTUALIZAR INVENTARIO</span>';
-            btn.className = "w-full py-5 bg-amber-600 hover:bg-amber-700 text-white font-black rounded-2xl text-xl shadow-lg shadow-amber-600/30 flex items-center justify-center gap-3 transition-transform active:scale-95";
+            btn.innerHTML = '<i class="fas fa-edit text-2xl text-white"></i> <span>ACTUALIZAR INVENTARIO</span>';
+            btn.className = "w-full py-5 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-2xl text-xl shadow-lg shadow-amber-500/30 flex items-center justify-center gap-3 transition-transform active:scale-95";
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -693,7 +662,6 @@
             document.getElementById('tipo_empaque').value = 'Caja';
             document.getElementById('categoria').value = 'Abarrotes';
             
-            // Vaciar todas las celdas numéricas
             document.getElementById('unds_por_empaque').value = '';
             document.getElementById('cant_empaques').value = '';
             document.getElementById('cant_sueltos').value = '';
@@ -708,7 +676,7 @@
         }
 
         async function eliminarRegistro(id) {
-            if(!confirm("⚠ ¿Estás seguro de eliminar este producto de la base de datos permanentemente?")) return;
+            if(!confirm("⚠ ¿Eliminar este producto permanentemente de la nube?")) return;
             try {
                 if (googleScriptURL) {
                     const resp = await fetch(googleScriptURL, {
@@ -718,19 +686,13 @@
                     });
                     const result = await resp.json();
                     if(result.status === 'success') {
-                        mostrarToast("Producto eliminado de Google Sheets", "success");
+                        mostrarToast("Producto eliminado", "success");
                         await cargarInventarioCore();
-                    } else throw new Error();
-                } else {
-                    inventario = inventario.filter(p => p.ID !== id);
-                    localStorage.setItem('bodega_local_cache', JSON.stringify(inventario));
-                    renderizarTabla();
-                    mostrarToast("Eliminado Localmente", "info");
+                    }
                 }
-            } catch(e) { mostrarToast("Error al conectar con la Nube para eliminar", "error"); } 
+            } catch(e) { mostrarToast("Error al eliminar de la Nube", "error"); } 
         }
 
-        // --- SISTEMA DE PESTAÑAS (TABS) ---
         function cambiarPestana(tabId) {
             document.getElementById('tab-registro').classList.add('hidden');
             document.getElementById('tab-inventario').classList.add('hidden');
@@ -776,7 +738,7 @@
                     const emp = prod.Tipo_Empaque || 'Caja';
 
                     const tr = document.createElement('tr');
-                    tr.className = "hover:bg-slate-50 transition-colors";
+                    tr.className = "hover:bg-slate-50 transition-colors border-b border-slate-50";
                     tr.innerHTML = `
                         <td class="px-5 py-4">
                             <div class="font-bold text-slate-800 leading-tight">${prod.Nombre || '-'}</div>
@@ -794,10 +756,10 @@
                         </td>
                         <td class="px-5 py-4 text-center">
                             <div class="flex justify-center gap-2">
-                                <button onclick="editarFilaFormulario('${prod.ID}')" class="w-9 h-9 rounded-xl bg-slate-100 text-slate-600 hover:bg-indigo-600 hover:text-white transition-colors shadow-sm flex items-center justify-center" title="Editar">
+                                <button onclick="editarFilaFormulario('${prod.ID}')" class="w-9 h-9 rounded-xl bg-slate-100 text-slate-600 hover:bg-amber-500 hover:text-white transition-colors shadow-sm flex items-center justify-center">
                                     <i class="fas fa-pen text-sm"></i>
                                 </button>
-                                <button onclick="eliminarRegistro('${prod.ID}')" class="w-9 h-9 rounded-xl bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-colors shadow-sm flex items-center justify-center" title="Eliminar">
+                                <button onclick="eliminarRegistro('${prod.ID}')" class="w-9 h-9 rounded-xl bg-red-50 text-red-500 hover:bg-red-600 hover:text-white transition-colors shadow-sm flex items-center justify-center">
                                     <i class="fas fa-trash text-sm"></i>
                                 </button>
                             </div>
@@ -808,7 +770,6 @@
             }
         }
 
-        // --- CONEXIÓN GS (API) ---
         async function cargarDesdeGoogleSheets() {
             if (!googleScriptURL) return;
             document.getElementById('loading-overlay').classList.remove('hidden');
@@ -816,19 +777,17 @@
             icon.classList.add('fa-spin');
             
             try {
-                // 1. Cargar el Catálogo (para el buscador)
+                // Descargar Catálogo
                 const resCat = await fetch(googleScriptURL + "?action=catalog");
                 catalogoBase = await resCat.json();
 
-                // 2. Cargar el Inventario Físico
+                // Descargar Inventario
                 await cargarInventarioCore();
                 
                 actualizarIndicadorConexion(true, "Nube Conectada");
-                mostrarToast("Base de datos sincronizada", "success");
             } catch (error) {
                 console.error(error);
-                actualizarIndicadorConexion(false, "Error de Conexión");
-                mostrarToast("No se pudo conectar a Google Sheets. Revisa tu internet o los permisos del link.", "error");
+                actualizarIndicadorConexion(false, "Fallo Nube");
             } finally {
                 document.getElementById('loading-overlay').classList.add('hidden');
                 icon.classList.remove('fa-spin');
