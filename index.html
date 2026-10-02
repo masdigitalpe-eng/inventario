@@ -361,7 +361,7 @@
         // 🔗 PEGA AQUÍ TU LINK DE GOOGLE APPS SCRIPT (Web App URL)
         // IMPORTANTE: El link debe terminar en "/exec"
         // =======================================================================
-        const MI_URL_DE_GOOGLE_SHEETS = "https://script.google.com/macros/s/AKfycbzflCJT15Iq-X9zMWpLLecdRLDNmw7L8ZEaSD61RAJ-vEsdwfvZ0ULOUL8bIpocMhFFJg/exec"; // Pega tu link dentro de las comillas
+        const MI_URL_DE_GOOGLE_SHEETS = "https://script.google.com/macros/s/AKfycbzflCJT15Iq-X9zMWpLLecdRLDNmw7L8ZEaSD61RAJ-vEsdwfvZ0ULOUL8bIpocMhFFJg/exec"; 
         // =======================================================================
 
         let inventario = [];
@@ -434,22 +434,18 @@
                 fps: 15,
                 qrbox: (viewfinderWidth, viewfinderHeight) => {
                     return {
-                        width: viewfinderWidth * 0.85, 
-                        height: 150 
+                        width: viewfinderWidth * 0.90, // 90% del ancho del celular
+                        height: 120 
                     };
                 }
             };
             
-            // Forzar la cámara a resolución HD y autofocus continuo
-            const videoConstraints = {
-                facingMode: "environment",
-                width: { ideal: 1280 },
-                height: { ideal: 720 },
-                advanced: [{ focusMode: "continuous" }]
-            };
-            
+            // SOLUCIÓN AL BLOQUEO DE CÁMARA: 
+            // Quitamos la restricción forzada de resolución que causaba que 
+            // el navegador rechace la cámara sin pedir permiso.
+            // Esto pide la cámara trasera de forma segura universal.
             html5QrCode.start(
-                videoConstraints, 
+                { facingMode: "environment" }, 
                 configEscaner,
                 (decodedText) => {
                     playBeep(); // Suena fuerte el BEEP de éxito
@@ -460,7 +456,8 @@
                 (errorMessage) => { /* Ignorar avisos mientras busca la caja */ }
             ).catch(err => {
                 cerrarEscaner();
-                mostrarToast("No se pudo abrir la cámara. Acepta los permisos de tu navegador.", "error");
+                console.error("Error cámara:", err);
+                mostrarToast("Debes otorgar permisos de cámara en tu navegador para usar el escáner.", "error");
             });
         }
 
