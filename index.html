@@ -431,11 +431,20 @@
             
             // Recuadro alargado para códigos de barras
             const configEscaner = { 
-                fps: 15,
+                fps: 20, // Más rápido
+                // FILTRO DE SUPERMERCADO: Obligamos al escáner a buscar SOLO códigos de barras, ignorando QR.
+                formatsToSupport: [
+                    Html5QrcodeSupportedFormats.EAN_13,
+                    Html5QrcodeSupportedFormats.EAN_8,
+                    Html5QrcodeSupportedFormats.UPC_A,
+                    Html5QrcodeSupportedFormats.UPC_E,
+                    Html5QrcodeSupportedFormats.CODE_128,
+                    Html5QrcodeSupportedFormats.CODE_39
+                ],
                 qrbox: (viewfinderWidth, viewfinderHeight) => {
                     return {
                         width: viewfinderWidth * 0.90, // 90% del ancho del celular
-                        height: 120 
+                        height: 150 // Un poquito más alto para que entren bien las rayas negras
                     };
                 }
             };
