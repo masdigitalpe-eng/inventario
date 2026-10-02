@@ -349,7 +349,7 @@
         // =======================================================================
         // 🔗 LINK DE GOOGLE APPS SCRIPT (Web App URL)
         // =======================================================================
-        const MI_URL_DE_GOOGLE_SHEETS = "https://script.google.com/macros/s/AKfycbzflCJT15Iq-X9zMWpLLecdRLDNmw7L8ZEaSD61RAJ-vEsdwfvZ0ULOUL8bIpocMhFFJg/exec"; 
+        const MI_URL_DE_GOOGLE_SHEETS = "https://script.google.com/macros/s/AKfycbzYqB_uObLzUR0qRSq9eWmofjFKj_kFOMe8SE_R8eG8M7nZbdQHj4VSbW4eN9124xaCEg/exec"; 
         // =======================================================================
 
         let inventario = [];
@@ -381,33 +381,38 @@
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
+            // TRUCO PARA CELULARES: Reproducir un sonido mudo inmediatamente al tocar el botón para "desbloquear" el audio
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            gain.gain.value = 0;
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(0);
+            osc.stop(audioCtx.currentTime + 0.01);
         }
 
         function playBeep() {
             try {
-                if (!audioCtx) inicializarAudio();
+                if (!audioCtx) return;
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
                 osc.type = 'square'; 
                 osc.frequency.setValueAtTime(880, audioCtx.currentTime); 
-                gain.gain.setValueAtTime(0, audioCtx.currentTime);
-                gain.gain.linearRampToValueAtTime(1, audioCtx.currentTime + 0.02);
-                gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
+                gain.gain.setValueAtTime(1, audioCtx.currentTime); // Volumen alto y directo
                 osc.start(audioCtx.currentTime);
-                osc.stop(audioCtx.currentTime + 0.15);
+                osc.stop(audioCtx.currentTime + 0.1); // Sonido cortante como caja de súper
             } catch(e) { console.log("Audio no soportado"); }
         }
 
         // --- CÁMARA ESCÁNER (SOLUCIONADO RETRASO Y RESOLUCIÓN) ---
         function abrirCamara() {
-            inicializarAudio(); // Activa permiso de audio
+            inicializarAudio(); // ¡Desbloquea el audio justo al tocar el botón!
             
             const modal = document.getElementById('modal-escaner');
-            modal.classList.remove('hidden'); // 1. Mostrar ventana
+            modal.classList.remove('hidden'); 
             
-            // 2. Esperar 150ms a que la ventana esté 100% dibujada en pantalla
             setTimeout(() => {
                 modal.classList.remove('opacity-0');
                 
@@ -415,14 +420,13 @@
                     html5QrCode = new Html5Qrcode("reader");
                 }
                 
-                // 3. Encender cámara (Ahora sí sabe de qué tamaño es la pantalla)
                 html5QrCode.start(
-                    { facingMode: "environment" }, // Cámara trasera estándar (Evita bloqueos de iPhone)
+                    { facingMode: "environment" }, 
                     { 
-                        fps: 10,
-                        // El qrbox crea el rectángulo de escaneo. Usamos un rectángulo ancho para EAN-13
+                        fps: 30, // SUBIMOS A 30 FPS PARA ESCANEO ULTRA RÁPIDO (< 1 segundo)
                         qrbox: function(viewfinderWidth, viewfinderHeight) {
-                            return { width: viewfinderWidth * 0.85, height: 150 };
+                            // Le damos un recuadro definido para que el algoritmo enfoque rápido y no se maree
+                            return { width: viewfinderWidth * 0.9, height: 150 };
                         },
                         formatsToSupport: [
                             Html5QrcodeSupportedFormats.EAN_13,
@@ -433,18 +437,18 @@
                         ]
                     },
                     (decodedText) => {
-                        playBeep(); // Suena fuerte
+                        playBeep(); // ¡Suena el BEEP real!
                         cerrarEscaner();
                         document.getElementById('codigo').value = decodedText;
                         buscarProductoPorCodigo(decodedText);
                     },
-                    (errorMessage) => { /* Ignora errores de escaneo buscando foco */ }
+                    (errorMessage) => { /* Ignora errores de enfoque para no saturar */ }
                 ).catch(err => {
                     console.error("Error al iniciar cámara:", err);
                     cerrarEscaner();
                     mostrarToast("Permite el acceso a la cámara en tu navegador.", "error");
                 });
-            }, 150); // El retraso salva el escáner
+            }, 100); 
         }
 
         function cerrarEscaner() {
