@@ -11,59 +11,38 @@
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         
-        /* Scrollbar Premium */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
-        /* Ocultar flechas de inputs numéricos */
         input[type="number"]::-webkit-inner-spin-button, 
         input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         
-        /* Animaciones suaves */
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         
         @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         .toast-enter { animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         
-        /* Inputs estilo "App" Limpios */
         .input-app {
-            width: 100%;
-            background-color: #f1f5f9;
-            border: 2px solid transparent;
-            border-radius: 0.75rem;
-            padding: 0.875rem 1rem;
-            color: #0f172a;
-            font-weight: 600;
-            transition: all 0.2s ease;
-            outline: none;
+            width: 100%; background-color: #f1f5f9; border: 2px solid transparent; border-radius: 0.75rem;
+            padding: 0.875rem 1rem; color: #0f172a; font-weight: 600; transition: all 0.2s ease; outline: none;
         }
-        .input-app:focus {
-            background-color: #ffffff;
-            border-color: #6366f1;
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
-        }
+        .input-app:focus { background-color: #ffffff; border-color: #6366f1; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1); }
         
-        /* Glass Header */
-        .glass-header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
-        }
+        .glass-header { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(226, 232, 240, 0.8); }
 
-        /* Arreglo cámara: No forzamos tamaños raros para que el lector funcione exacto */
+        /* ESCÁNER CORREGIDO: Sin object-fit para que lea toda la imagen sin recortarla */
         #reader { border: none !important; width: 100%; }
-        #reader video { border-radius: 1rem; width: 100%; }
+        #reader video { border-radius: 1rem; width: 100%; display: block; }
     </style>
 </head>
 <body class="text-slate-800 min-h-screen flex flex-col selection:bg-indigo-100 selection:text-indigo-900 relative">
 
     <!-- HEADER FLOTANTE -->
     <header class="glass-header shadow-sm sticky top-0 z-40">
-        <div class="max-w-4xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
             <div class="flex items-center gap-3">
                 <div class="bg-indigo-600 text-white p-2.5 rounded-xl shadow-lg shadow-indigo-600/30 flex items-center justify-center h-10 w-10">
                     <i class="fas fa-store text-lg"></i>
@@ -86,7 +65,7 @@
         </div>
         
         <!-- Pestañas -->
-        <div class="max-w-4xl mx-auto px-4 pb-3 flex justify-center md:justify-start mt-2">
+        <div class="max-w-5xl mx-auto px-4 pb-3 flex justify-center md:justify-start mt-2">
             <div class="bg-slate-100 p-1.5 rounded-xl flex gap-1 w-full shadow-inner border border-slate-200">
                 <button onclick="cambiarPestana('tab-registro')" id="btn-tab-registro" class="flex-1 py-2.5 px-4 rounded-lg bg-white shadow-sm border border-slate-200/50 text-indigo-600 font-bold text-sm flex items-center justify-center gap-2 transition-all">
                     <i class="fas fa-plus-circle"></i> Registrar Producto
@@ -98,62 +77,59 @@
         </div>
     </header>
 
-    <main class="flex-grow flex flex-col w-full max-w-4xl mx-auto mb-10">
+    <main class="flex-grow flex flex-col w-full max-w-5xl mx-auto mb-10">
         
         <!-- PESTAÑA 1: REGISTRO -->
-        <div id="tab-registro" class="p-4 md:p-6 animate-fade-in w-full">
+        <div id="tab-registro" class="p-4 md:p-6 animate-fade-in w-full max-w-3xl mx-auto">
             <form id="product-form" class="space-y-6">
                 <input type="hidden" id="producto_id">
                 
-                <!-- SECCIÓN: PRODUCTO E IDENTIFICACIÓN (SOLUCIONADO OVERFLOW) -->
-                <!-- Quitamos el 'overflow-hidden' y usamos border-l-8 para que las sugerencias no se corten -->
-                <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 border-l-8 border-l-blue-500 relative">
-                    <div class="flex justify-between items-center mb-5">
-                        <h3 class="text-sm font-black text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                            <i class="fas fa-box-open text-blue-500"></i> 1. Datos del Producto
+                <!-- 1. IDENTIFICACIÓN -->
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 relative">
+                    <div class="flex justify-between items-center mb-5 border-b border-slate-100 pb-4">
+                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                            <span class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center"><i class="fas fa-box-open"></i></span>
+                            Datos del Producto
                         </h3>
                         <button type="button" onclick="limpiarFormulario()" class="text-xs font-bold text-slate-400 hover:text-red-500 transition-colors bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-                            <i class="fas fa-broom"></i> Limpiar
+                            Limpiar <i class="fas fa-broom ml-1"></i>
                         </button>
                     </div>
                     
                     <div class="space-y-5">
-                        <!-- Código de Barras -->
                         <div>
-                            <label class="block text-xs font-black text-slate-600 mb-2">CÓDIGO DE BARRAS (Opcional)</label>
+                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">CÓDIGO DE BARRAS</label>
                             <div class="flex gap-2">
                                 <div class="relative flex-grow">
                                     <i class="fas fa-barcode absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl"></i>
-                                    <input type="text" id="codigo" class="input-app pl-12 text-lg font-mono tracking-widest uppercase" placeholder="Escanear o escribir..." autocomplete="off">
+                                    <input type="text" id="codigo" class="input-app pl-12 font-mono tracking-widest text-slate-700" placeholder="Escanear o escribir..." autocomplete="off">
                                 </div>
-                                <button type="button" onclick="abrirCamara()" class="bg-slate-800 hover:bg-slate-900 text-white px-5 rounded-xl transition-colors shadow-md flex items-center justify-center">
+                                <!-- BOTÓN DE CÁMARA PARA REGISTRO -->
+                                <button type="button" onclick="abrirCamara(false)" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 rounded-xl transition-colors shadow-md shadow-indigo-200 flex items-center justify-center w-16 shrink-0">
                                     <i class="fas fa-camera text-xl"></i>
                                 </button>
                             </div>
                         </div>
                         
-                        <!-- Buscador Inteligente por Nombre -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5 relative z-50">
                             <div class="relative">
-                                <label class="block text-xs font-black text-slate-600 mb-2">NOMBRE DEL PRODUCTO</label>
+                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">NOMBRE DEL PRODUCTO</label>
                                 <div class="relative">
                                     <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                    <input type="text" id="nombre" required class="input-app pl-12 text-lg" placeholder="Ej. Leche Gloria" autocomplete="off">
+                                    <input type="text" id="nombre" required class="input-app pl-12" placeholder="Ej. Leche Gloria" autocomplete="off">
                                 </div>
-                                <!-- Caja de sugerencias (Ahora flotará libremente sin cortarse) -->
                                 <div id="sugerencias-container" class="absolute z-[100] w-full bg-white rounded-xl shadow-2xl border border-slate-200 max-h-60 overflow-y-auto hidden mt-2">
                                     <ul id="sugerencias-lista" class="divide-y divide-slate-100"></ul>
                                 </div>
                             </div>
                             <div>
-                                <label class="block text-xs font-black text-slate-600 mb-2">CATEGORÍA</label>
+                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">CATEGORÍA</label>
                                 <div class="relative">
-                                    <select id="categoria" required class="input-app appearance-none pr-10 text-lg">
+                                    <select id="categoria" required class="input-app appearance-none pr-10">
                                         <option value="Abarrotes">Abarrotes</option>
                                         <option value="Lácteos">Lácteos</option>
                                         <option value="Bebidas">Bebidas</option>
                                         <option value="Limpieza">Limpieza</option>
-                                        <option value="Cuidado Personal">Cuidado Personal</option>
                                         <option value="Snacks y Golosinas">Snacks y Golosinas</option>
                                         <option value="Otros">Otros</option>
                                     </select>
@@ -164,77 +140,67 @@
                     </div>
                 </div>
 
-                <!-- SECCIÓN: STOCK Y EMPAQUE (DUPLICADOS ELIMINADOS Y CELDAS VACÍAS) -->
-                <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 border-l-8 border-l-amber-500 relative relative z-10">
-                    <h3 class="text-sm font-black text-slate-400 uppercase tracking-wider flex items-center gap-2 mb-6">
-                        <i class="fas fa-cubes text-amber-500"></i> 2. Stock Físico (Conteo)
+                <!-- 2. STOCK FÍSICO -->
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 relative z-10">
+                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-wider flex items-center gap-2 mb-5 border-b border-slate-100 pb-4">
+                        <span class="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center"><i class="fas fa-cubes"></i></span>
+                        Stock y Conteo Físico
                     </h3>
                     
-                    <!-- Definición del Empaque -->
-                    <div class="bg-amber-50/50 p-5 rounded-2xl border border-amber-100 mb-6">
-                        <div class="flex flex-col sm:flex-row gap-4 items-end">
+                    <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100 mb-6">
+                        <div class="flex flex-col sm:flex-row gap-4">
                             <div class="flex-1 w-full">
-                                <label class="block text-xs font-black text-slate-600 mb-2">CÓMO VIENE EMPACADO:</label>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">CÓMO VIENE EMPACADO</label>
                                 <div class="relative">
                                     <select id="tipo_empaque" class="input-app appearance-none bg-white">
                                         <option value="Caja">Caja</option>
                                         <option value="Plancha">Plancha</option>
                                         <option value="Six-Pack">Six-Pack</option>
                                         <option value="Saco">Saco</option>
-                                        <option value="Fardo">Fardo</option>
-                                        <option value="Display">Display</option>
-                                        <option value="Docena">Docena</option>
+                                        <option value="Malla">Malla</option>
                                         <option value="Kilo">Kilo</option>
+                                        <option value="Display">Display</option>
                                         <option value="Unidad">Unidad (Sin empaque)</option>
                                     </select>
                                     <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
                                 </div>
                             </div>
                             <div class="w-full sm:w-48">
-                                <label class="block text-xs font-black text-amber-700 mb-2">¿CUÁNTAS UNIDADES TRAE?</label>
-                                <!-- Valor inicial vacío, se selecciona al tocar -->
-                                <input type="number" id="unds_por_empaque" required min="1" placeholder="Ej: 6" class="input-app bg-white text-center font-black text-xl text-amber-900 border-amber-200 focus:border-amber-500" oninput="calcularDinamicamente()" onclick="this.select()">
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">¿CUÁNTAS UNDS TRAE?</label>
+                                <input type="number" id="unds_por_empaque" required min="1" placeholder="Ej: 6" class="input-app bg-white text-center font-black text-xl text-slate-700" oninput="calcularDinamicamente()" onclick="this.select()">
                             </div>
                         </div>
                     </div>
 
-                    <!-- Cantidades (Cajas y Sueltos) - ¡SOLO HAY UNO AHORA! -->
                     <div class="grid grid-cols-2 gap-4 md:gap-6 mb-6">
-                        <div class="bg-slate-50 border-2 border-slate-100 rounded-2xl p-5 flex flex-col items-center justify-center focus-within:border-amber-400 focus-within:bg-amber-50 transition-colors shadow-inner">
-                            <label class="text-[11px] font-black text-slate-500 uppercase tracking-wider mb-3 text-center">Cajas / Paquetes Enteros</label>
-                            <input type="number" id="cant_empaques" min="0" step="0.01" placeholder="0" class="w-full bg-transparent text-5xl md:text-6xl font-black text-center text-slate-800 outline-none p-0" oninput="calcularDinamicamente()" onclick="this.select()">
+                        <div class="bg-amber-50/50 border border-amber-100 rounded-2xl p-5 flex flex-col items-center justify-center focus-within:border-amber-400 focus-within:bg-amber-50 transition-colors">
+                            <label class="text-[10px] font-bold text-amber-700 uppercase tracking-wider mb-3 text-center">Cajas / Paquetes Enteros</label>
+                            <input type="number" id="cant_empaques" min="0" step="0.01" placeholder="0" class="w-full bg-transparent text-4xl md:text-5xl font-black text-center text-amber-900 outline-none p-0" oninput="calcularDinamicamente()" onclick="this.select()">
                         </div>
-                        <div class="bg-slate-50 border-2 border-slate-100 rounded-2xl p-5 flex flex-col items-center justify-center focus-within:border-blue-400 focus-within:bg-blue-50 transition-colors shadow-inner">
-                            <label class="text-[11px] font-black text-slate-500 uppercase tracking-wider mb-3 text-center">Unidades Sueltas</label>
-                            <input type="number" id="cant_sueltos" min="0" step="0.01" placeholder="0" class="w-full bg-transparent text-5xl md:text-6xl font-black text-center text-slate-800 outline-none p-0" oninput="calcularDinamicamente()" onclick="this.select()">
-                        </div>
-                    </div>
-                    
-                    <!-- Resumen Total Unidades -->
-                    <div class="bg-slate-900 rounded-2xl p-5 flex justify-between items-center shadow-lg">
-                        <span class="text-sm font-black text-slate-400 uppercase tracking-widest">Total en Inventario:</span>
-                        <div class="text-3xl font-black text-white tracking-tight">
-                            <span id="lbl_total_unds">0</span> <span class="text-lg text-slate-500">Unidades</span>
+                        <div class="bg-blue-50/50 border border-blue-100 rounded-2xl p-5 flex flex-col items-center justify-center focus-within:border-blue-400 focus-within:bg-blue-50 transition-colors">
+                            <label class="text-[10px] font-bold text-blue-700 uppercase tracking-wider mb-3 text-center">Unidades Sueltas</label>
+                            <input type="number" id="cant_sueltos" min="0" step="0.01" placeholder="0" class="w-full bg-transparent text-4xl md:text-5xl font-black text-center text-blue-900 outline-none p-0" oninput="calcularDinamicamente()" onclick="this.select()">
                         </div>
                     </div>
                 </div>
 
-                <!-- SECCIÓN: FINANZAS Y COSTOS -->
-                <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 border-l-8 border-l-emerald-500 relative">
-                    <h3 class="text-sm font-black text-slate-400 uppercase tracking-wider flex items-center gap-2 mb-6">
-                        <i class="fas fa-coins text-emerald-500"></i> 3. Dinero (Soles S/)
+                <!-- 3. FINANZAS -->
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 relative">
+                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-wider flex items-center gap-2 mb-5 border-b border-slate-100 pb-4">
+                        <span class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center"><i class="fas fa-coins"></i></span>
+                        Precios y Finanzas (S/)
                     </h3>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
-                            <label class="block text-xs font-black text-slate-600 mb-2">COSTO DE LA CAJA / PAQUETE ENTERO</label>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">COSTO DE COMPRA (LA CAJA/PAQUETE)</label>
                             <div class="relative">
                                 <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-lg">S/</span>
                                 <input type="number" id="costo_empaque" required min="0" step="0.01" placeholder="0.00" class="input-app pl-12 text-xl font-bold" oninput="calcularDinamicamente()" onclick="this.select()">
                             </div>
                         </div>
                         <div>
-                            <label class="block text-xs font-black text-emerald-700 mb-2">PRECIO DE VENTA (POR UNIDAD)</label>
+                            <label class="block text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-2">PRECIO DE VENTA (POR UNIDAD)</label>
                             <div class="relative">
                                 <span class="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-600 font-bold text-lg">S/</span>
                                 <input type="number" id="precio_venta" required min="0" step="0.01" placeholder="0.00" class="input-app pl-12 text-xl font-bold bg-emerald-50 border-emerald-200 text-emerald-900 focus:border-emerald-500 focus:bg-white" oninput="calcularDinamicamente()" onclick="this.select()">
@@ -242,27 +208,28 @@
                         </div>
                     </div>
                     
-                    <!-- Explicación Matemática y Ganancia -->
-                    <div class="grid grid-cols-2 gap-4 mt-4 pt-6 border-t border-slate-100">
+                    <div class="grid grid-cols-2 gap-4 bg-slate-50 rounded-xl p-4 border border-slate-100">
                         <div>
-                            <p class="text-[10px] font-black text-slate-400 uppercase mb-1">Costo por Unidad Real:</p>
-                            <p id="lbl_costo_unit" class="text-2xl font-black text-slate-700 tracking-tight">S/ 0.00</p>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Costo por Unidad Real:</p>
+                            <p id="lbl_costo_unit" class="text-lg font-black text-slate-700">S/ 0.00</p>
                         </div>
-                        <div class="text-right">
-                            <p class="text-[10px] font-black text-slate-400 uppercase mb-1">Tu ganancia por Unidad:</p>
-                            <p id="lbl_margen" class="text-2xl font-black text-slate-700 tracking-tight">S/ 0.00</p>
+                        <div class="text-right border-l border-slate-200 pl-4">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Tu ganancia por Unidad:</p>
+                            <p id="lbl_margen" class="text-lg font-black text-slate-700">S/ 0.00</p>
                         </div>
                     </div>
+                </div>
 
-                    <!-- VALOR TOTAL DEL STOCK (El cálculo exacto) -->
-                    <div class="mt-6 bg-indigo-50 rounded-2xl p-5 border border-indigo-100 flex flex-col md:flex-row justify-between items-center gap-3">
-                        <div>
-                            <p class="text-[11px] font-black text-indigo-600 uppercase tracking-wider">Costo Total del Stock Actual</p>
-                            <p class="text-[10px] font-medium text-indigo-400 mt-1">Costo unitario x Total de unidades</p>
-                        </div>
-                        <div class="text-center md:text-right">
-                            <p id="lbl_costo_total_stock" class="text-3xl md:text-4xl font-black text-indigo-700">S/ 0.00</p>
-                        </div>
+                <!-- RESUMEN FINAL GIGANTE -->
+                <div class="bg-slate-900 rounded-3xl p-6 flex flex-col md:flex-row justify-between items-center gap-4 shadow-xl">
+                    <div class="text-center md:text-left">
+                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Unidades</p>
+                        <p class="text-3xl font-black text-white"><span id="lbl_total_unds">0</span> <span class="text-sm text-slate-500 font-medium">unds</span></p>
+                    </div>
+                    <div class="h-10 w-px bg-slate-700 hidden md:block"></div>
+                    <div class="text-center md:text-right">
+                        <p class="text-[11px] font-bold text-indigo-400 uppercase tracking-widest mb-1">Costo Total Stock Invertido</p>
+                        <p id="lbl_costo_total_stock" class="text-3xl font-black text-indigo-300">S/ 0.00</p>
                     </div>
                 </div>
 
@@ -280,74 +247,91 @@
                 <div class="p-4 md:p-5 border-b border-slate-100 flex flex-col sm:flex-row gap-3 bg-slate-50">
                     <div class="relative flex-grow">
                         <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="text" id="buscador" onkeyup="renderizarTabla()" placeholder="Buscar producto en tu bodega..." class="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl font-medium focus:border-indigo-400 outline-none shadow-sm">
+                        <input type="text" id="buscador" class="input-app pl-12 bg-white w-full" placeholder="Buscar por producto o código..." oninput="renderizarTabla()">
                     </div>
-                    <button onclick="cargarDesdeGoogleSheets()" class="shrink-0 px-6 py-3 bg-white text-slate-700 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors font-bold flex items-center justify-center gap-2 shadow-sm">
+                    <button type="button" onclick="abrirCamara(true)" class="bg-slate-800 hover:bg-slate-900 text-white px-5 rounded-xl transition-colors shadow-md flex items-center justify-center shrink-0">
+                        <i class="fas fa-camera text-xl"></i>
+                    </button>
+                    <button onclick="cargarDesdeGoogleSheets()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-4 rounded-xl border border-indigo-200 transition-colors flex items-center gap-2 shrink-0">
                         <i class="fas fa-sync-alt text-indigo-500" id="icon-refresh"></i> Actualizar Nube
                     </button>
+                </div>
+
+                <!-- 💰 GRAN RESUMEN DEL TRASPASO (NUEVO) -->
+                <div class="bg-slate-900 px-6 py-5 border-b-4 border-emerald-500 flex flex-col md:flex-row justify-between items-center gap-4 shadow-inner">
+                    <div>
+                        <h3 class="text-sm font-black text-emerald-400 uppercase tracking-widest flex items-center gap-2">
+                            <i class="fas fa-chart-line"></i> Valorización del Traspaso
+                        </h3>
+                        <p class="text-xs text-slate-400 mt-1 font-medium">Suma del costo total de toda la mercadería registrada</p>
+                    </div>
+                    <div class="text-right bg-slate-800 px-5 py-3 rounded-2xl border border-slate-700">
+                        <span class="text-sm font-bold text-slate-400 mr-2">TOTAL:</span>
+                        <span id="gran-total-inversion" class="text-3xl font-black text-white tracking-tight">S/ 0.00</span>
+                    </div>
                 </div>
 
                 <!-- Tabla Responsive -->
                 <div class="overflow-x-auto">
                     <div id="loading-overlay" class="py-20 flex flex-col items-center justify-center hidden">
                         <div class="w-12 h-12 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
-                        <p class="font-bold text-slate-500 uppercase tracking-widest text-sm">Descargando Base de Datos...</p>
+                        <p class="font-bold text-slate-500 uppercase tracking-widest text-sm">Sincronizando Base de Datos...</p>
                     </div>
 
                     <table class="min-w-full divide-y divide-slate-100 text-left">
-                        <thead class="bg-white">
+                        <thead class="bg-slate-50">
                             <tr>
-                                <th class="px-5 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Producto</th>
-                                <th class="px-5 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Stock Físico</th>
-                                <th class="px-5 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Inversión (Total)</th>
-                                <th class="px-5 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Acciones</th>
+                                <th class="px-5 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Producto y Presentación</th>
+                                <th class="px-5 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Stock Físico</th>
+                                <th class="px-5 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right">Precios / Inversión</th>
+                                <th class="px-5 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody id="tabla-body" class="divide-y divide-slate-50 bg-white text-sm">
+                        <tbody id="tabla-body" class="divide-y divide-slate-100 bg-white text-sm">
                             <!-- JS Inyecta las filas aquí -->
                         </tbody>
                     </table>
                     
-                    <div id="estado-vacio" class="hidden flex-col items-center justify-center py-24 text-slate-400 bg-slate-50">
+                    <div id="estado-vacio" class="hidden flex-col items-center justify-center py-24 text-slate-400 bg-white">
                         <i class="fas fa-folder-open text-5xl mb-4 opacity-30 text-indigo-500"></i>
                         <p class="text-xl font-bold text-slate-600">No hay productos guardados</p>
-                        <p class="text-sm mt-1">Registra productos para verlos aquí.</p>
+                        <p class="text-sm mt-1">Registra productos o usa el escáner para empezar.</p>
                     </div>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- MODAL ESCÁNER DE CÁMARA REAL (RECTANGULAR Y SOLUCIONADO) -->
-    <div id="modal-escaner" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex flex-col items-center justify-center hidden opacity-0 transition-opacity duration-300">
-        <div class="w-full max-w-lg bg-white rounded-3xl overflow-hidden shadow-2xl m-4" id="modal-escaner-content">
-            <div class="px-5 py-4 flex justify-between items-center border-b border-slate-100 bg-slate-50">
+    <!-- MODAL ESCÁNER CORREGIDO -->
+    <div id="modal-escaner" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[100] flex flex-col items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="w-full max-w-lg m-4" id="modal-escaner-content">
+            <div class="bg-white rounded-t-2xl px-5 py-4 flex justify-between items-center shadow-lg">
                 <h3 class="font-black text-slate-800 flex items-center gap-2">
-                    <i class="fas fa-qrcode text-indigo-500 text-xl"></i> Escáner de Código
+                    <i class="fas fa-qrcode text-indigo-500 text-xl"></i> Escaneando...
                 </h3>
-                <button onclick="cerrarEscaner()" class="text-slate-400 hover:text-red-500 bg-white shadow-sm rounded-full w-10 h-10 flex items-center justify-center transition-colors">
-                    <i class="fas fa-times text-lg"></i>
+                <button onclick="cerrarEscaner()" class="text-slate-400 hover:text-red-500 transition-colors p-2">
+                    <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
             
-            <div class="p-4 bg-black relative flex items-center justify-center min-h-[250px]">
-                <!-- Aquí se inyecta la cámara. Sin forzar tamaños para evitar errores en iOS/Android -->
-                <div id="reader" class="w-full overflow-hidden bg-black flex items-center justify-center"></div>
+            <div class="relative bg-black w-full overflow-hidden flex items-center justify-center shadow-2xl">
+                <!-- La cámara usará su tamaño natural sin distorsión -->
+                <div id="reader" class="w-full bg-black"></div>
             </div>
             
-            <div class="px-5 py-5 text-center bg-white">
-                <p class="text-sm text-slate-600 font-bold uppercase tracking-wider">APUNTA AL CÓDIGO DE BARRAS</p>
-                <p class="text-xs text-slate-400 mt-1">Se leerá automáticamente (Hará BEEP)</p>
+            <div class="bg-white rounded-b-2xl px-5 py-5 text-center shadow-lg">
+                <p class="text-sm text-slate-800 font-black uppercase tracking-wider">APUNTA AL CÓDIGO DE BARRAS</p>
+                <p class="text-xs text-slate-500 mt-1 font-medium">Se leerá automáticamente a 30 FPS</p>
             </div>
         </div>
     </div>
 
-    <!-- Contenedor para Notificaciones Flotantes (Toasts) -->
+    <!-- Toasts -->
     <div id="toast-container" class="fixed bottom-6 right-6 z-[200] flex flex-col gap-3 pointer-events-none"></div>
 
     <script>
         // =======================================================================
-        // 🔗 LINK DE GOOGLE APPS SCRIPT (Web App URL)
+        // 🔗 TU LINK DE GOOGLE APPS SCRIPT (Ya configurado)
         // =======================================================================
         const MI_URL_DE_GOOGLE_SHEETS = "https://script.google.com/macros/s/AKfycbzYqB_uObLzUR0qRSq9eWmofjFKj_kFOMe8SE_R8eG8M7nZbdQHj4VSbW4eN9124xaCEg/exec"; 
         // =======================================================================
@@ -355,25 +339,24 @@
         let inventario = [];
         let catalogoBase = [];
         let html5QrCode = null;
-        let googleScriptURL = MI_URL_DE_GOOGLE_SHEETS.trim();
         let audioCtx = null; 
+        let escanerParaBusqueda = false; // Define si escanea para agregar o para buscar
         
         document.addEventListener('DOMContentLoaded', () => {
             verificarLinkYConectar();
         });
 
         function verificarLinkYConectar() {
-            if (googleScriptURL) {
+            if (MI_URL_DE_GOOGLE_SHEETS.includes("script.google.com")) {
                 cargarDesdeGoogleSheets();
             } else {
-                actualizarIndicadorConexion(false, "Sin Enlace GS");
+                actualizarIndicadorConexion(false, "Falta Link GS");
                 const localData = localStorage.getItem('bodega_local_cache');
                 if (localData) { inventario = JSON.parse(localData); renderizarTabla(); }
-                mostrarToast("Trabajando de forma local (Sin Nube)", "warning");
             }
         }
 
-        // --- SISTEMA DE SONIDO BEEP (CÁMARA) ---
+        // --- SISTEMA DE SONIDO BEEP AL INSTANTE ---
         function inicializarAudio() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -381,7 +364,7 @@
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
-            // TRUCO PARA CELULARES: Reproducir un sonido mudo inmediatamente al tocar el botón para "desbloquear" el audio
+            // Desbloqueo silencioso para iOS/Android
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             gain.gain.value = 0;
@@ -398,57 +381,58 @@
                 const gain = audioCtx.createGain();
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
-                osc.type = 'square'; 
+                osc.type = 'square'; // Sonido caja registradora
                 osc.frequency.setValueAtTime(880, audioCtx.currentTime); 
-                gain.gain.setValueAtTime(1, audioCtx.currentTime); // Volumen alto y directo
+                gain.gain.setValueAtTime(1, audioCtx.currentTime);
                 osc.start(audioCtx.currentTime);
-                osc.stop(audioCtx.currentTime + 0.1); // Sonido cortante como caja de súper
+                osc.stop(audioCtx.currentTime + 0.1); 
             } catch(e) { console.log("Audio no soportado"); }
         }
 
-        // --- CÁMARA ESCÁNER (SOLUCIONADO RETRASO Y RESOLUCIÓN) ---
-        function abrirCamara() {
-            inicializarAudio(); // ¡Desbloquea el audio justo al tocar el botón!
+        // --- CÁMARA ESCÁNER ULTRA RÁPIDO ---
+        function abrirCamara(modoBusqueda = false) {
+            escanerParaBusqueda = modoBusqueda; // Guarda el modo en el que abrimos la cámara
+            inicializarAudio(); // Desbloquea sonido
             
             const modal = document.getElementById('modal-escaner');
             modal.classList.remove('hidden'); 
             
             setTimeout(() => {
                 modal.classList.remove('opacity-0');
-                
-                if(!html5QrCode) {
-                    html5QrCode = new Html5Qrcode("reader");
-                }
+                if(!html5QrCode) { html5QrCode = new Html5Qrcode("reader"); }
                 
                 html5QrCode.start(
                     { facingMode: "environment" }, 
                     { 
-                        fps: 30, // SUBIMOS A 30 FPS PARA ESCANEO ULTRA RÁPIDO (< 1 segundo)
+                        fps: 30, // Ultra rápido
+                        // El recuadro ayuda a que no lea cosas falsas en las esquinas
                         qrbox: function(viewfinderWidth, viewfinderHeight) {
-                            // Le damos un recuadro definido para que el algoritmo enfoque rápido y no se maree
-                            return { width: viewfinderWidth * 0.9, height: 150 };
-                        },
-                        formatsToSupport: [
-                            Html5QrcodeSupportedFormats.EAN_13,
-                            Html5QrcodeSupportedFormats.EAN_8,
-                            Html5QrcodeSupportedFormats.UPC_A,
-                            Html5QrcodeSupportedFormats.UPC_E,
-                            Html5QrcodeSupportedFormats.CODE_128
-                        ]
+                            return { width: viewfinderWidth * 0.9, height: 120 };
+                        }
                     },
                     (decodedText) => {
-                        playBeep(); // ¡Suena el BEEP real!
+                        playBeep(); 
                         cerrarEscaner();
-                        document.getElementById('codigo').value = decodedText;
-                        buscarProductoPorCodigo(decodedText);
+                        
+                        if (escanerParaBusqueda) {
+                            // Modo: Buscar en el inventario
+                            const buscador = document.getElementById('buscador');
+                            buscador.value = decodedText;
+                            renderizarTabla();
+                            mostrarToast("Búsqueda aplicada", "success");
+                        } else {
+                            // Modo: Registrar producto
+                            document.getElementById('codigo').value = decodedText;
+                            buscarProductoPorCodigo(decodedText);
+                        }
                     },
-                    (errorMessage) => { /* Ignora errores de enfoque para no saturar */ }
+                    (errorMessage) => { /* ignora fallos de enfoque */ }
                 ).catch(err => {
-                    console.error("Error al iniciar cámara:", err);
+                    console.error(err);
                     cerrarEscaner();
                     mostrarToast("Permite el acceso a la cámara en tu navegador.", "error");
                 });
-            }, 100); 
+            }, 100); // 100ms evita el bug de tamaño 0 en celulares
         }
 
         function cerrarEscaner() {
@@ -467,18 +451,16 @@
 
         inputNombre.addEventListener('input', function() {
             const texto = this.value.toLowerCase().trim();
-            
             if (texto.length < 2) {
                 sugerenciasContenedor.classList.add('hidden');
                 return;
             }
             
-            // Buscar en el catálogo que descargó de Google Sheets
-            const filtrados = catalogoBase.filter(p => p.Nombre.toLowerCase().includes(texto));
+            const filtrados = catalogoBase.filter(p => (p.Nombre||"").toLowerCase().includes(texto));
             
             if (filtrados.length > 0) {
                 sugerenciasLista.innerHTML = filtrados.map(p => `
-                    <li class="px-4 py-3 hover:bg-indigo-50 cursor-pointer transition-colors flex flex-col" onclick='seleccionarSugerencia(${JSON.stringify(p).replace(/'/g, "&#39;")})'>
+                    <li class="px-4 py-3 hover:bg-indigo-50 cursor-pointer transition-colors flex flex-col border-l-4 border-transparent hover:border-indigo-500" onclick='seleccionarSugerencia(${JSON.stringify(p).replace(/'/g, "&#39;")})'>
                         <span class="font-bold text-slate-800 text-sm">${p.Nombre}</span>
                         <span class="text-[10px] text-slate-500 font-bold uppercase">${p.Categoria} • ${p.Presentacion || p.Tipo_Empaque}</span>
                     </li>
@@ -489,7 +471,6 @@
             }
         });
 
-        // Ocultar al hacer clic fuera
         document.addEventListener('click', function(e) {
             if (!e.target.closest('#sugerencias-container') && e.target.id !== 'nombre') {
                 sugerenciasContenedor.classList.add('hidden');
@@ -519,17 +500,23 @@
             if (e.key === 'Enter') { e.preventDefault(); buscarProductoPorCodigo(this.value.trim()); }
         });
 
+        // --- SOLUCIÓN ERROR DE PRODUCTO NUEVO VS EXISTENTE (Tipos de datos String) ---
         function buscarProductoPorCodigo(cod) {
             if(!cod) return;
-            // 1. Busca en inventario local (si ya lo habías guardado)
-            const prodExistente = inventario.find(p => p.Codigo === cod);
+            
+            // Forzamos a que sean Strings para que Google Sheets (que envía números) no rompa la búsqueda
+            const codigoStr = String(cod).trim();
+            
+            // 1. Busca en inventario local (Actualizar)
+            const prodExistente = inventario.find(p => String(p.Codigo) === codigoStr);
             if (prodExistente) {
                 editarFilaFormulario(prodExistente.ID);
-                mostrarToast("Producto encontrado. Listo para actualizar stock.", "info");
+                mostrarToast("Producto encontrado en tu inventario. Listo para actualizar.", "info");
                 return;
             }
+            
             // 2. Busca en catálogo de la Nube (Google Sheets)
-            const enCatalogo = catalogoBase.find(p => p.Codigo == cod);
+            const enCatalogo = catalogoBase.find(p => String(p.Codigo) === codigoStr);
             if (enCatalogo) {
                 seleccionarSugerencia(enCatalogo);
             } else {
@@ -538,7 +525,7 @@
             }
         }
 
-        // --- MATEMÁTICA EXACTA Y EN VIVO ---
+        // --- MATEMÁTICA EXACTA ---
         function calcularDinamicamente() {
             const undsPorEmpaque = parseFloat(document.getElementById('unds_por_empaque').value) || 0;
             const cantEmpaques = parseFloat(document.getElementById('cant_empaques').value) || 0;
@@ -547,37 +534,34 @@
             const costoEmpaque = parseFloat(document.getElementById('costo_empaque').value) || 0;
             const precioVenta = parseFloat(document.getElementById('precio_venta').value) || 0;
 
-            // 1. Total Unidades = (Cajas x Unidades por Caja) + Sueltos
             const totalUnidades = (cantEmpaques * undsPorEmpaque) + cantSueltos;
-            
-            // 2. Costo Unitario = Costo de Caja / Unidades por Caja
             const costoUnitario = (undsPorEmpaque > 0) ? (costoEmpaque / undsPorEmpaque) : 0;
-            
-            // 3. Costo Total del Stock = Total Unidades x Costo Unitario (La lógica exacta que pediste)
             const costoTotalStock = totalUnidades * costoUnitario;
-            
-            // 4. Margen
             const margen = precioVenta - costoUnitario;
 
-            // Pintar resultados
             document.getElementById('lbl_total_unds').innerText = totalUnidades % 1 === 0 ? totalUnidades : totalUnidades.toFixed(2);
             document.getElementById('lbl_costo_unit').innerText = 'S/ ' + costoUnitario.toFixed(2);
             document.getElementById('lbl_costo_total_stock').innerText = 'S/ ' + costoTotalStock.toFixed(2);
             
             const lblMargen = document.getElementById('lbl_margen');
             lblMargen.innerText = 'S/ ' + margen.toFixed(2);
-            if (margen > 0) { lblMargen.className = "text-2xl font-black text-emerald-500 tracking-tight"; } 
-            else if (margen < 0) { lblMargen.className = "text-2xl font-black text-red-500 tracking-tight"; } 
-            else { lblMargen.className = "text-2xl font-black text-slate-700 tracking-tight"; }
+            if (margen > 0) { lblMargen.className = "text-lg font-black text-emerald-600"; } 
+            else if (margen < 0) { lblMargen.className = "text-lg font-black text-red-500"; } 
+            else { lblMargen.className = "text-lg font-black text-slate-700"; }
         }
 
         // --- GUARDAR EN GOOGLE SHEETS ---
         document.getElementById('product-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             
+            if(!MI_URL_DE_GOOGLE_SHEETS.includes("script.google.com")) {
+                mostrarToast("Falta pegar tu Link de Google Sheets en el código", "error");
+                return;
+            }
+
             const btnSubmit = document.getElementById('btn-submit');
             const txtOriginal = btnSubmit.innerHTML;
-            btnSubmit.innerHTML = '<i class="fas fa-circle-notch fa-spin text-2xl text-white"></i> <span>Guardando...</span>';
+            btnSubmit.innerHTML = '<i class="fas fa-circle-notch fa-spin text-2xl text-white"></i> <span>Guardando en Nube...</span>';
             btnSubmit.disabled = true;
 
             const unds = parseFloat(document.getElementById('unds_por_empaque').value) || 1;
@@ -609,25 +593,23 @@
             };
 
             try {
-                if (googleScriptURL) {
-                    const resp = await fetch(googleScriptURL, {
-                        method: 'POST',
-                        body: JSON.stringify({ action: 'save', product: producto }),
-                        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-                    });
-                    
-                    if(!resp.ok) throw new Error("Fallo de red");
-                    const result = await resp.json();
-                    
-                    if(result.status === 'success') {
-                        mostrarToast("Guardado en Google Sheets", "success");
-                        await cargarInventarioCore(); 
-                        limpiarFormulario();
-                    } else throw new Error(result.message);
-                }
+                const resp = await fetch(MI_URL_DE_GOOGLE_SHEETS, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'save', product: producto }),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                });
+                
+                if(!resp.ok) throw new Error("Fallo de red");
+                const result = await resp.json();
+                
+                if(result.status === 'success') {
+                    mostrarToast("¡Guardado exitoso!", "success");
+                    await cargarInventarioCore(); 
+                    limpiarFormulario();
+                } else throw new Error(result.message);
             } catch (error) {
                 console.error(error);
-                mostrarToast("No se pudo guardar. Verifica que Google Sheets tenga acceso de 'Cualquier Persona'", "error");
+                mostrarToast("Error al guardar. Revisa que el Web App tenga acceso de 'Cualquier Persona'", "error");
             } finally {
                 btnSubmit.innerHTML = txtOriginal;
                 btnSubmit.disabled = false;
@@ -644,7 +626,6 @@
             document.getElementById('nombre').value = prod.Nombre || '';
             document.getElementById('tipo_empaque').value = prod.Tipo_Empaque || 'Caja';
             
-            // Usamos strings vacíos para que sea fácil editar al hacer clic
             document.getElementById('unds_por_empaque').value = prod.Unds_Por_Empaque || '';
             document.getElementById('cant_empaques').value = prod.Cant_Empaques || '';
             document.getElementById('cant_sueltos').value = prod.Cant_Sueltos || '';
@@ -655,7 +636,7 @@
             cambiarPestana('tab-registro');
             
             const btn = document.getElementById('btn-submit');
-            btn.innerHTML = '<i class="fas fa-edit text-2xl text-white"></i> <span>ACTUALIZAR INVENTARIO</span>';
+            btn.innerHTML = '<i class="fas fa-edit text-2xl text-white"></i> <span>ACTUALIZAR STOCK</span>';
             btn.className = "w-full py-5 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-2xl text-xl shadow-lg shadow-amber-500/30 flex items-center justify-center gap-3 transition-transform active:scale-95";
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -682,17 +663,15 @@
         async function eliminarRegistro(id) {
             if(!confirm("⚠ ¿Eliminar este producto permanentemente de la nube?")) return;
             try {
-                if (googleScriptURL) {
-                    const resp = await fetch(googleScriptURL, {
-                        method: 'POST',
-                        body: JSON.stringify({ action: 'delete', product: { ID: id } }),
-                        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-                    });
-                    const result = await resp.json();
-                    if(result.status === 'success') {
-                        mostrarToast("Producto eliminado", "success");
-                        await cargarInventarioCore();
-                    }
+                const resp = await fetch(MI_URL_DE_GOOGLE_SHEETS, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'delete', product: { ID: id } }),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                });
+                const result = await resp.json();
+                if(result.status === 'success') {
+                    mostrarToast("Producto eliminado", "success");
+                    await cargarInventarioCore();
                 }
             } catch(e) { mostrarToast("Error al eliminar de la Nube", "error"); } 
         }
@@ -718,14 +697,23 @@
             }
         }
 
+        // --- TABLA DETALLADA CON FINANZAS (Corregido error de búsqueda string) ---
         function renderizarTabla() {
             const tbody = document.getElementById('tabla-body');
-            const term = document.getElementById('buscador').value.toLowerCase();
+            const buscadorElement = document.getElementById('buscador');
+            const term = buscadorElement ? buscadorElement.value.toLowerCase() : '';
             const emptyState = document.getElementById('estado-vacio');
+            
+            // Calcular el GRAN TOTAL DE INVERSIÓN (Suma de todo el inventario real)
+            const valorTotalTraspaso = inventario.reduce((suma, prod) => suma + (parseFloat(prod.Costo_Total) || 0), 0);
+            const granTotalElement = document.getElementById('gran-total-inversion');
+            if (granTotalElement) {
+                granTotalElement.innerText = 'S/ ' + valorTotalTraspaso.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'); // Agrega comas a los miles
+            }
             
             const filtrados = inventario.filter(p => 
                 (p.Nombre || '').toLowerCase().includes(term) || 
-                (p.Codigo || '').toLowerCase().includes(term)
+                (p.Codigo || '').toString().toLowerCase().includes(term)
             );
 
             tbody.innerHTML = '';
@@ -739,6 +727,8 @@
                     const cSue = parseFloat(prod.Cant_Sueltos) || 0;
                     const totUnds = parseFloat(prod.Total_Unidades) || 0;
                     const cTot = parseFloat(prod.Costo_Total) || 0;
+                    const pVenta = parseFloat(prod.Precio_Venta) || 0;
+                    const cUnit = parseFloat(prod.Costo_Unitario) || 0;
                     const emp = prod.Tipo_Empaque || 'Caja';
 
                     const tr = document.createElement('tr');
@@ -746,7 +736,10 @@
                     tr.innerHTML = `
                         <td class="px-5 py-4">
                             <div class="font-bold text-slate-800 leading-tight">${prod.Nombre || '-'}</div>
-                            <div class="text-[10px] text-slate-400 font-bold mt-1 uppercase">${prod.Codigo || 'S/N'} • ${prod.Categoria || ''}</div>
+                            <div class="text-[10px] text-slate-500 font-bold mt-1 uppercase flex items-center gap-2">
+                                <span class="bg-slate-100 px-2 py-0.5 rounded text-slate-600"><i class="fas fa-barcode"></i> ${prod.Codigo || 'S/N'}</span>
+                                <span>${prod.Presentacion || ''}</span>
+                            </div>
                         </td>
                         <td class="px-5 py-4 text-center">
                             <div class="inline-flex flex-col items-center">
@@ -755,8 +748,9 @@
                             </div>
                         </td>
                         <td class="px-5 py-4 text-right">
-                            <div class="font-black text-indigo-700 text-sm">S/ ${cTot.toFixed(2)}</div>
-                            <div class="text-[10px] font-bold text-slate-400">Total Stock</div>
+                            <div class="font-bold text-emerald-600 text-xs">Venta: S/ ${pVenta.toFixed(2)}</div>
+                            <div class="font-bold text-slate-400 text-[10px] mb-1">Costo Unit: S/ ${cUnit.toFixed(2)}</div>
+                            <div class="font-black text-indigo-700 text-sm border-t border-slate-100 pt-1">Total Inv: S/ ${cTot.toFixed(2)}</div>
                         </td>
                         <td class="px-5 py-4 text-center">
                             <div class="flex justify-center gap-2">
@@ -775,19 +769,16 @@
         }
 
         async function cargarDesdeGoogleSheets() {
-            if (!googleScriptURL) return;
+            if (!MI_URL_DE_GOOGLE_SHEETS.includes("script.google.com")) return;
             document.getElementById('loading-overlay').classList.remove('hidden');
             const icon = document.getElementById('icon-refresh');
             icon.classList.add('fa-spin');
             
             try {
-                // Descargar Catálogo
-                const resCat = await fetch(googleScriptURL + "?action=catalog");
+                const resCat = await fetch(MI_URL_DE_GOOGLE_SHEETS + "?action=catalog");
                 catalogoBase = await resCat.json();
 
-                // Descargar Inventario
                 await cargarInventarioCore();
-                
                 actualizarIndicadorConexion(true, "Nube Conectada");
             } catch (error) {
                 console.error(error);
@@ -799,7 +790,7 @@
         }
 
         async function cargarInventarioCore() {
-            const response = await fetch(googleScriptURL + "?action=read");
+            const response = await fetch(MI_URL_DE_GOOGLE_SHEETS + "?action=read");
             inventario = await response.json();
             localStorage.setItem('bodega_local_cache', JSON.stringify(inventario));
             renderizarTabla();
